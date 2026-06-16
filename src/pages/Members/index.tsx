@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Plus, Search, Edit3, Trash2, User, Phone, Heart, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { FamilyMember } from '@/types';
@@ -37,7 +37,7 @@ export default function MembersList() {
     branchId: '',
   });
 
-  const generations = [...new Set(members.map(m => m.generation))].sort((a, b) => a - b);
+  void getGenerationName;
 
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.name.includes(searchTerm) || 

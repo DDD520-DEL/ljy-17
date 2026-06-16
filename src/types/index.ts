@@ -106,3 +106,75 @@ export interface TreeNode {
   children: TreeNode[];
   spouse?: TreeNode;
 }
+
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  avatar?: string;
+  createdAt: string;
+  lastLoginAt: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  email: string;
+  username: string;
+  password: string;
+}
+
+export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error' | 'conflict';
+
+export interface SyncState {
+  status: SyncStatus;
+  lastSyncAt: string | null;
+  lastSyncError: string | null;
+  autoSyncEnabled: boolean;
+  pendingChanges: number;
+}
+
+export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings';
+
+export interface ConflictItem {
+  entityType: EntityType;
+  entityId: string;
+  localData: Record<string, unknown>;
+  remoteData: Record<string, unknown>;
+  localUpdatedAt: string;
+  remoteUpdatedAt: string;
+  fieldChanges: string[];
+}
+
+export type ConflictResolutionStrategy = 'useLocal' | 'useRemote' | 'merge';
+
+export interface ConflictResolution {
+  strategy: ConflictResolutionStrategy;
+  resolutions?: Record<string, 'local' | 'remote'>;
+}
+
+export interface CloudDataSnapshot {
+  userId: string;
+  branches: FamilyBranch[];
+  ancestors: Ancestor[];
+  rituals: Ritual[];
+  reservations: RitualReservation[];
+  members: FamilyMember[];
+  settings: AppSettings;
+  snapshotAt: string;
+  version: number;
+}
+
+export interface SyncResult {
+  success: boolean;
+  conflicts?: ConflictItem[];
+  syncedAt?: string;
+  error?: string;
+  changesApplied?: {
+    local: number;
+    remote: number;
+  };
+}

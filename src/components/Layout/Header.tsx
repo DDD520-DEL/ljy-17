@@ -1,4 +1,4 @@
-import { Bell, Search, Menu, X, User, Calendar, Users } from 'lucide-react';
+import { Bell, Search, Menu, X, User, Calendar, Users, Cloud, CloudOff, Wifi, RefreshCw, AlertCircle, LogOut, Settings } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
@@ -21,12 +21,14 @@ interface SearchResult {
 export default function Header({ onMenuToggle, isMobileMenuOpen }: HeaderProps) {
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   
-  const { reminders, ancestors, rituals, members, setGlobalSearchTerm } = useAppStore();
+  const { reminders, ancestors, rituals, members, setGlobalSearchTerm, user, syncState, logout } = useAppStore();
   
   const urgentReminders = reminders.filter(r => r.daysLeft <= 3);
   const hasUrgent = urgentReminders.length > 0;
@@ -35,6 +37,9 @@ export default function Header({ onMenuToggle, isMobileMenuOpen }: HeaderProps) 
     const handleClickOutside = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setShowSearchResults(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -136,6 +141,46 @@ export default function Header({ onMenuToggle, isMobileMenuOpen }: HeaderProps) 
       case 'member':
         navigate('/members', { state: { searchTerm: result.title } });
         break;
+    }
+  };
+
+  const handleLogout = async () => {
+    setShowUserMenu(false);
+    await logout();
+  };
+
+  const getSyncIcon = () => {
+    switch (syncState.status) {
+      case 'syncing':
+        return <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />;
+      case 'success':
+        return <Wifi className="w-4 h-4 text-emerald-500" />;
+      case 'error':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'conflict':
+        return <AlertCircle className="w-4 h-4 text-amber-500" />;
+      default:
+        if (!user) return <CloudOff className="w-4 h-4 text-brown-400" />;
+        if (syncState.pendingChanges > 0) return <Cloud className="w-4 h-4 text-orange-500" />;
+        return <Wifi className="w-4 h-4 text-emerald-500" />;
+    }
+  };
+
+  const getSyncTooltip = () => {
+    switch (syncState.status) {
+      case 'syncing':
+        return '正在同步...';
+      case 'success':
+        return '同步成功';
+      case 'error':
+        return `同步失败：${syncState.lastSyncError || '未知错误'}`;
+      case 'conflict':
+        return '存在数据冲突';
+      default:
+        if (!user) return '未登录 - 点击登录后可同步';
+        if (syncState.pendingChanges > 0) return `${syncState.pendingChanges} 项待同步`;
+        if (syncState.lastSyncAt) return `已同步：${new Date(syncState.lastSyncAt).toLocaleString('zh-CN')}`;
+        return '已连接云端';
     }
   };
 
@@ -303,9 +348,83 @@ export default function Header({ onMenuToggle, isMobileMenuOpen }: HeaderProps) 
             </div>
           )}
         </div>
+
+        <button
+          onClick={() => user ? navigate('/settings') : navigate('/auth')}
+          className="p-2.5 hover:bg-brown-100 rounded-xl transition-all"
+          title={getSyncTooltip()}
+        >
+          {getSyncIcon()}
+        </button>
         
-        <div className="w-10 h-10 bg-gradient-to-br from-brown-500 to-brown-700 rounded-full flex items-center justify-center text-white font-medium shadow-soft">
-          族
+        <div className="relative" ref={userMenuRef}>
+          <button
+            className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white font-medium shadow-soft hover:shadow-md transition-shadow"
+            onClick={() => user ? setShowUserMenu(!showUserMenu) : navigate('/auth')}
+          >
+            {user ? user.username.charAt(0).toUpperCase() : '族'}
+          </button>
+
+          {showUserMenu && user && (
+            <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-card border border-brown-100 overflow-hidden z-50 animate-fade-in">
+              <div className="p-4 border-b border-brown-100 bg-gradient-to-r from-amber-50 to-orange-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-soft">
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-brown-800 truncate">{user.username}</p>
+                    <p className="text-xs text-brown-500 truncate">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-2">
+                <button
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    navigate('/settings');
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-cream-50 transition-colors text-left"
+                >
+                  <Settings className="w-4 h-4 text-brown-500" />
+                  <span className="text-sm text-brown-700">设置与同步</span>
+                </button>
+                <div className="h-px bg-brown-100 my-1" />
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 transition-colors text-left text-red-600"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm">退出登录</span>
+                </button>
+              </div>
+              <div className="p-3 bg-brown-50 border-t border-brown-100">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-brown-500">同步状态</span>
+                  <span className={`inline-flex items-center gap-1 ${
+                    syncState.status === 'error' ? 'text-red-600' :
+                    syncState.status === 'syncing' ? 'text-blue-600' :
+                    syncState.pendingChanges > 0 ? 'text-orange-600' :
+                    'text-emerald-600'
+                  }`}>
+                    {getSyncIcon()}
+                    {syncState.status === 'syncing' ? '同步中' :
+                     syncState.status === 'error' ? '异常' :
+                     syncState.pendingChanges > 0 ? `${syncState.pendingChanges}项待同步` :
+                     '正常'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!user && !showUserMenu && (
+            <div className="absolute right-0 top-full mt-2 hidden group-hover:block">
+              <div className="w-48 p-2 bg-white rounded-xl shadow-card border border-brown-100 text-xs text-brown-600 text-center">
+                点击登录账户
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

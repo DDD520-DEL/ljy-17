@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react';
-import { 
-  Settings, 
-  Bell, 
-  Download, 
-  Upload, 
-  Trash2, 
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Settings,
+  Bell,
+  Download,
+  Upload,
+  Trash2,
   AlertTriangle,
   CheckCircle,
   Info,
@@ -13,26 +14,72 @@ import {
   Edit3,
   X,
   Palette,
+  Cloud,
+  CloudOff,
+  CloudUpload,
+  CloudDownload,
+  RefreshCw,
+  User,
+  LogOut,
+  LogIn,
+  AlertCircle,
+  Clock,
+  Wifi,
+  WifiOff,
+  ChevronRight,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { FamilyBranch } from '@/types';
+import { FamilyBranch, ConflictResolution } from '@/types';
+import ConflictResolverDialog from '@/components/ConflictResolverDialog';
+
+const formatSyncTime = (iso: string | null): string => {
+  if (!iso) return '尚未同步';
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+
+  if (diffMins < 1) return '刚刚同步';
+  if (diffMins < 60) return `${diffMins} 分钟前同步`;
+  if (diffHours < 24) return `${diffHours} 小时前同步`;
+  return d.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 
 export default function SettingsPage() {
-  const { 
-    settings, 
-    updateSettings, 
-    exportData, 
-    importData, 
+  const navigate = useNavigate();
+  const {
+    settings,
+    updateSettings,
+    exportData,
+    importData,
     clearAllData,
     branches,
     addBranch,
     updateBranch,
     deleteBranch,
+    user,
+    syncState,
+    pendingConflicts,
+    setAutoSyncEnabled,
+    syncNow,
+    forceUpload,
+    forceDownload,
+    logout,
+    resolveConflicts,
+    dismissConflicts,
+    refreshPendingChanges,
   } = useAppStore();
+
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [showBranchForm, setShowBranchForm] = useState(false);
   const [editingBranch, setEditingBranch] = useState<FamilyBranch | null>(null);
   const [showDeleteBranchConfirm, setShowDeleteBranchConfirm] = useState<string | null>(null);
@@ -41,6 +88,13 @@ export default function SettingsPage() {
     description: '',
     color: '#dc2626',
   });
+
+  const [isSyncAction, setIsSyncAction] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  useEffect(() => {
+    refreshPendingChanges();
+  }, [refreshPendingChanges]);
 
   const colorPresets = [
     '#dc2626',
@@ -79,13 +133,16 @@ export default function SettingsPage() {
         const success = importData(jsonStr);
         setImportStatus(success ? 'success' : 'error');
         setTimeout(() => setImportStatus('idle'), 3000);
+        if (success && user) {
+          refreshPendingChanges();
+        }
       } catch {
         setImportStatus('error');
         setTimeout(() => setImportStatus('idle'), 3000);
       }
     };
     reader.readAsText(file);
-    
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -110,21 +167,131 @@ export default function SettingsPage() {
 
   const handleSaveBranch = () => {
     if (!branchFormData.name?.trim()) return;
-    
+
     if (editingBranch) {
       updateBranch(editingBranch.id, branchFormData);
     } else {
       addBranch(branchFormData as Omit<FamilyBranch, 'id' | 'createdAt' | 'updatedAt'>);
     }
-    
+
     setShowBranchForm(false);
     setEditingBranch(null);
+    if (user) {
+      refreshPendingChanges();
+    }
   };
 
   const handleDeleteBranch = (id: string) => {
     deleteBranch(id);
     setShowDeleteBranchConfirm(null);
+    if (user) {
+      refreshPendingChanges();
+    }
   };
+
+  const handleSyncNow = async () => {
+    setIsSyncAction(true);
+    setSyncError(null);
+    try {
+      const result = await syncNow();
+      if (!result.success) {
+        setSyncError(result.error || '同步失败');
+      }
+    } finally {
+      setIsSyncAction(false);
+    }
+  };
+
+  const handleForceUpload = async () => {
+    setIsSyncAction(true);
+    setSyncError(null);
+    try {
+      const result = await forceUpload();
+      if (!result.success) {
+        setSyncError(result.error || '上传失败');
+      }
+    } finally {
+      setIsSyncAction(false);
+    }
+  };
+
+  const handleForceDownload = async () => {
+    setIsSyncAction(true);
+    setSyncError(null);
+    try {
+      const result = await forceDownload();
+      if (!result.success) {
+        setSyncError(result.error || '下载失败');
+      }
+    } finally {
+      setIsSyncAction(false);
+    }
+  };
+
+  const handleResolveConflicts = async (resolutions: Map<string, ConflictResolution>) => {
+    setIsSyncAction(true);
+    try {
+      await resolveConflicts(resolutions);
+    } finally {
+      setIsSyncAction(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  const getSyncStatusDisplay = () => {
+    switch (syncState.status) {
+      case 'syncing':
+        return {
+          icon: <RefreshCw className="w-4 h-4 animate-spin" />,
+          text: '同步中...',
+          color: 'text-blue-600 bg-blue-50 border-blue-200',
+        };
+      case 'success':
+        return {
+          icon: <CheckCircle className="w-4 h-4" />,
+          text: '同步成功',
+          color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+        };
+      case 'error':
+        return {
+          icon: <AlertCircle className="w-4 h-4" />,
+          text: '同步失败',
+          color: 'text-red-600 bg-red-50 border-red-200',
+        };
+      case 'conflict':
+        return {
+          icon: <AlertTriangle className="w-4 h-4" />,
+          text: '存在冲突',
+          color: 'text-amber-600 bg-amber-50 border-amber-200',
+        };
+      default:
+        if (!user) {
+          return {
+            icon: <CloudOff className="w-4 h-4" />,
+            text: '未启用同步',
+            color: 'text-brown-400 bg-brown-50 border-brown-200',
+          };
+        }
+        if (syncState.pendingChanges > 0) {
+          return {
+            icon: <WifiOff className="w-4 h-4" />,
+            text: `${syncState.pendingChanges} 项待同步`,
+            color: 'text-orange-600 bg-orange-50 border-orange-200',
+          };
+        }
+        return {
+          icon: <Wifi className="w-4 h-4" />,
+          text: '已连接云端',
+          color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+        };
+    }
+  };
+
+  const syncStatusDisplay = getSyncStatusDisplay();
 
   return (
     <div className="animate-fade-in max-w-3xl mx-auto">
@@ -136,6 +303,226 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
+        <div className="card">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className={`p-3 rounded-xl ${user ? 'bg-sky-100' : 'bg-brown-100'}`}>
+                <User className={`w-5 h-5 ${user ? 'text-sky-600' : 'text-brown-500'}`} />
+              </div>
+              <div>
+                <h3 className="font-serif text-lg font-semibold text-brown-800">账户信息</h3>
+                <p className="text-sm text-brown-500">
+                  {user ? '登录账户以启用云端同步' : '登录后可跨设备同步数据'}
+                </p>
+              </div>
+            </div>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <div className="text-right hidden sm:block">
+                  <div className="text-sm font-medium text-brown-800">{user.username}</div>
+                  <div className="text-xs text-brown-500">{user.email}</div>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold shadow-soft">
+                  {user.username.charAt(0).toUpperCase()}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 hover:bg-red-50 rounded-xl transition-colors text-red-500"
+                  title="退出登录"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate('/auth')}
+                className="btn-primary flex items-center gap-2"
+              >
+                <LogIn className="w-4 h-4" />
+                登录 / 注册
+              </button>
+            )}
+          </div>
+
+          {user && (
+            <div className="space-y-3 text-sm bg-cream-50 rounded-xl p-4 border border-brown-100">
+              <div className="flex items-center justify-between">
+                <span className="text-brown-500">用户ID</span>
+                <span className="text-brown-700 font-mono text-xs">{user.id.substring(0, 16)}...</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-brown-500">注册时间</span>
+                <span className="text-brown-700">
+                  {new Date(user.createdAt).toLocaleDateString('zh-CN')}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-brown-500">最近登录</span>
+                <span className="text-brown-700">
+                  {new Date(user.lastLoginAt).toLocaleString('zh-CN')}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-indigo-100 rounded-xl">
+                <Cloud className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="font-serif text-lg font-semibold text-brown-800">云端同步</h3>
+                <p className="text-sm text-brown-500">多设备间自动同步家族数据</p>
+              </div>
+            </div>
+            <div
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border ${syncStatusDisplay.color}`}
+            >
+              {syncStatusDisplay.icon}
+              {syncStatusDisplay.text}
+            </div>
+          </div>
+
+          {user ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="p-4 bg-cream-50 rounded-xl border border-brown-100">
+                  <div className="flex items-center gap-2 mb-1 text-brown-500 text-xs">
+                    <Clock className="w-3.5 h-3.5" />
+                    最近同步
+                  </div>
+                  <div className="text-brown-800 font-medium">
+                    {formatSyncTime(syncState.lastSyncAt)}
+                  </div>
+                </div>
+                <div className="p-4 bg-cream-50 rounded-xl border border-brown-100">
+                  <div className="flex items-center gap-2 mb-1 text-brown-500 text-xs">
+                    <WifiOff className="w-3.5 h-3.5" />
+                    待同步变更
+                  </div>
+                  <div className="text-brown-800 font-medium">
+                    {syncState.pendingChanges} 项
+                    {syncState.pendingChanges > 0 && (
+                      <button
+                        onClick={handleSyncNow}
+                        disabled={isSyncAction}
+                        className="ml-2 text-xs text-indigo-600 hover:text-indigo-700 font-normal inline-flex items-center gap-0.5"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${isSyncAction ? 'animate-spin' : ''}`} />
+                        立即同步
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {syncState.lastSyncError && (
+                <div className="flex items-start gap-2 mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <div className="font-medium">同步出错</div>
+                    <div className="text-xs mt-0.5">{syncState.lastSyncError}</div>
+                  </div>
+                </div>
+              )}
+
+              {syncError && (
+                <div className="flex items-start gap-2 mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">{syncError}</span>
+                </div>
+              )}
+
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center justify-between p-4 bg-cream-50 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-100 rounded-lg">
+                      <RefreshCw className="w-4 h-4 text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-brown-700">自动同步</p>
+                      <p className="text-xs text-brown-500">数据变更后自动上传到云端</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={syncState.autoSyncEnabled}
+                      onChange={(e) => setAutoSyncEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-brown-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                  </label>
+                </div>
+
+                <button
+                  onClick={handleSyncNow}
+                  disabled={isSyncAction}
+                  className="w-full flex items-center justify-between p-4 bg-indigo-50 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition-colors disabled:opacity-50 group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-200 rounded-lg group-hover:bg-indigo-300 transition-colors">
+                      <CloudUpload className="w-4 h-4 text-indigo-700" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-indigo-700">立即同步</p>
+                      <p className="text-xs text-indigo-500">合并云端数据并上传变更</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-indigo-400" />
+                </button>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleForceUpload}
+                    disabled={isSyncAction}
+                    className="flex items-center justify-center gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors disabled:opacity-50 text-sm text-blue-700 font-medium"
+                  >
+                    <CloudUpload className="w-4 h-4" />
+                    强制上传
+                  </button>
+                  <button
+                    onClick={handleForceDownload}
+                    disabled={isSyncAction}
+                    className="flex items-center justify-center gap-2 p-3 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors disabled:opacity-50 text-sm text-purple-700 font-medium"
+                  >
+                    <CloudDownload className="w-4 h-4" />
+                    强制下载
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 bg-brown-50 rounded-xl border border-brown-100">
+                <p className="text-xs text-brown-500 leading-relaxed">
+                  💡 <span className="font-medium text-brown-600">温馨提示：</span>
+                  同步功能可防止本地数据丢失，并支持多设备访问。
+                  建议配合数据导出功能，定期手动备份重要数据。
+                  导入导出功能与云端同步互不冲突，可同时使用。
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brown-100 flex items-center justify-center">
+                <CloudOff className="w-8 h-8 text-brown-400" />
+              </div>
+              <p className="text-brown-600 mb-2">登录账户后即可启用云端同步</p>
+              <p className="text-sm text-brown-400 mb-4 max-w-sm mx-auto">
+                支持多设备数据同步、自动备份、永不丢失
+              </p>
+              <button
+                onClick={() => navigate('/auth')}
+                className="btn-primary inline-flex items-center gap-2"
+              >
+                <LogIn className="w-4 h-4" />
+                立即登录
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="card">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 bg-gold-100 rounded-xl">
@@ -267,7 +654,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h3 className="font-serif text-lg font-semibold text-brown-800">数据管理</h3>
-              <p className="text-sm text-brown-500">导出和导入家族数据</p>
+              <p className="text-sm text-brown-500">导出和导入家族数据（同步的补充手段）</p>
             </div>
           </div>
 
@@ -292,7 +679,7 @@ export default function SettingsPage() {
               <div>
                 <p className="text-sm font-medium text-brown-700">导入数据</p>
                 <p className="text-xs text-brown-500">
-                  从 JSON 文件恢复家族数据
+                  从 JSON 文件恢复家族数据，导入后将自动同步
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -365,17 +752,28 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center justify-between p-3 bg-cream-50 rounded-lg">
               <span className="text-brown-500">存储方式</span>
-              <span className="text-brown-800">浏览器本地存储 (localStorage)</span>
+              <span className="text-brown-800">
+                {user ? '本地存储 + 云端同步' : '浏览器本地存储 (localStorage)'}
+              </span>
             </div>
             <div className="p-4 bg-brown-50 rounded-xl border border-brown-100">
               <p className="text-xs text-brown-500 leading-relaxed">
-                💡 温馨提示：本应用数据存储在您的浏览器本地，请定期导出数据进行备份，
-                避免因清除浏览器数据导致信息丢失。
+                💡 温馨提示：建议同时使用云端同步与定期导出备份功能，
+                双重保障珍贵家族数据的安全。
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      {pendingConflicts && pendingConflicts.length > 0 && (
+        <ConflictResolverDialog
+          conflicts={pendingConflicts}
+          onResolve={handleResolveConflicts}
+          onDismiss={dismissConflicts}
+          isResolving={isSyncAction}
+        />
+      )}
 
       {showBranchForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

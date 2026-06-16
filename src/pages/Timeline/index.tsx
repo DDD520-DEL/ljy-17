@@ -80,7 +80,7 @@ export default function RitualTimeline() {
         <div className="relative pl-8">
           <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-gradient-to-b from-gold-400 via-brown-300 to-brown-200" />
           
-          {years.map((year, yearIndex) => (
+          {years.map((year) => (
             <div key={year} className="mb-12">
               <div className="relative -ml-8 mb-6">
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gold-500 rounded-full border-4 border-cream-100 shadow-glow z-10" />

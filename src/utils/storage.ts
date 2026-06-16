@@ -1,4 +1,5 @@
 import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch } from '@/types';
+import { changeTracker } from '@/services/changeTracker';
 
 const STORAGE_KEYS = {
   BRANCHES: 'family_branches',
@@ -35,6 +36,7 @@ export const storage = {
     };
     branches.push(newBranch);
     this.setBranches(branches);
+    changeTracker.recordChange('branches', newBranch.id, 'create');
     return newBranch;
   },
 
@@ -48,6 +50,7 @@ export const storage = {
       updatedAt: new Date().toISOString(),
     };
     this.setBranches(branches);
+    changeTracker.recordChange('branches', id, 'update');
     return branches[index];
   },
 
@@ -56,6 +59,7 @@ export const storage = {
     const filtered = branches.filter(b => b.id !== id);
     if (filtered.length === branches.length) return false;
     this.setBranches(filtered);
+    changeTracker.recordChange('branches', id, 'delete');
     
     const ancestors = this.getAncestors().map(a => 
       a.branchId === id ? { ...a, branchId: undefined } : a
@@ -94,6 +98,7 @@ export const storage = {
     };
     ancestors.push(newAncestor);
     this.setAncestors(ancestors);
+    changeTracker.recordChange('ancestors', newAncestor.id, 'create');
     return newAncestor;
   },
 
@@ -107,6 +112,7 @@ export const storage = {
       updatedAt: new Date().toISOString(),
     };
     this.setAncestors(ancestors);
+    changeTracker.recordChange('ancestors', id, 'update');
     return ancestors[index];
   },
 
@@ -115,6 +121,7 @@ export const storage = {
     const filtered = ancestors.filter(a => a.id !== id);
     if (filtered.length === ancestors.length) return false;
     this.setAncestors(filtered);
+    changeTracker.recordChange('ancestors', id, 'delete');
     return true;
   },
 
@@ -136,6 +143,7 @@ export const storage = {
     };
     rituals.push(newRitual);
     this.setRituals(rituals);
+    changeTracker.recordChange('rituals', newRitual.id, 'create');
     return newRitual;
   },
 
@@ -145,6 +153,7 @@ export const storage = {
     if (index === -1) return null;
     rituals[index] = { ...rituals[index], ...data };
     this.setRituals(rituals);
+    changeTracker.recordChange('rituals', id, 'update');
     return rituals[index];
   },
 
@@ -153,6 +162,7 @@ export const storage = {
     const filtered = rituals.filter(r => r.id !== id);
     if (filtered.length === rituals.length) return false;
     this.setRituals(filtered);
+    changeTracker.recordChange('rituals', id, 'delete');
     return true;
   },
 
@@ -174,6 +184,7 @@ export const storage = {
     };
     members.push(newMember);
     this.setMembers(members);
+    changeTracker.recordChange('members', newMember.id, 'create');
     return newMember;
   },
 
@@ -183,6 +194,7 @@ export const storage = {
     if (index === -1) return null;
     members[index] = { ...members[index], ...data };
     this.setMembers(members);
+    changeTracker.recordChange('members', id, 'update');
     return members[index];
   },
 
@@ -191,6 +203,7 @@ export const storage = {
     const filtered = members.filter(m => m.id !== id);
     if (filtered.length === members.length) return false;
     this.setMembers(filtered);
+    changeTracker.recordChange('members', id, 'delete');
     return true;
   },
 
@@ -213,6 +226,7 @@ export const storage = {
     };
     reservations.push(newReservation);
     this.setReservations(reservations);
+    changeTracker.recordChange('reservations', newReservation.id, 'create');
     return newReservation;
   },
 
@@ -226,6 +240,7 @@ export const storage = {
       updatedAt: new Date().toISOString(),
     };
     this.setReservations(reservations);
+    changeTracker.recordChange('reservations', id, 'update');
     return reservations[index];
   },
 
@@ -234,6 +249,7 @@ export const storage = {
     const filtered = reservations.filter(r => r.id !== id);
     if (filtered.length === reservations.length) return false;
     this.setReservations(filtered);
+    changeTracker.recordChange('reservations', id, 'delete');
     return true;
   },
 
@@ -246,6 +262,7 @@ export const storage = {
     const current = this.getSettings();
     const updated = { ...current, ...settings };
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
+    changeTracker.recordChange('settings', 'settings', 'update');
     return updated;
   },
 
