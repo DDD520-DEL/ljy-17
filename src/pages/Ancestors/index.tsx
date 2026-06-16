@@ -107,8 +107,12 @@ export default function AncestorsList() {
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-brown-400 to-brown-600 rounded-2xl flex items-center justify-center text-white text-2xl font-serif shadow-soft group-hover:scale-110 transition-transform">
-                  {ancestor.name.charAt(0)}
+                <div className="w-16 h-16 bg-gradient-to-br from-brown-400 to-brown-600 rounded-2xl flex items-center justify-center text-white text-2xl font-serif shadow-soft group-hover:scale-110 transition-transform overflow-hidden">
+                  {ancestor.photos && ancestor.photos.length > 0 ? (
+                    <img src={ancestor.photos[0]} alt={ancestor.name} className="w-full h-full object-cover" />
+                  ) : (
+                    ancestor.name.charAt(0)
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">

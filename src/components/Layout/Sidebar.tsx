@@ -9,6 +9,7 @@ import {
   Settings,
   Flame,
   CalendarClock,
+  Camera,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -17,6 +18,7 @@ const navItems = [
   { path: '/ancestors', icon: Flame, label: '先人管理' },
   { path: '/reservations', icon: CalendarClock, label: '祭祀预约' },
   { path: '/rituals', icon: CalendarDays, label: '祭祀记录' },
+  { path: '/album', icon: Camera, label: '家族相册' },
   { path: '/timeline', icon: ScrollText, label: '祭祀年表' },
   { path: '/family-tree', icon: TreeDeciduous, label: '族谱展示' },
   { path: '/members', icon: Users, label: '家属管理' },

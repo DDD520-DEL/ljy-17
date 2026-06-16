@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, User } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, User, ImagePlus, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Ancestor } from '@/types';
 
@@ -20,10 +20,12 @@ export default function AncestorForm({ mode }: AncestorFormProps) {
     deathDate: '',
     biography: '',
     generation: 0,
+    photos: [],
   });
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (mode === 'edit' && id) {
@@ -96,12 +98,87 @@ export default function AncestorForm({ mode }: AncestorFormProps) {
 
       <form onSubmit={handleSubmit} className="card space-y-6">
         <div className="flex items-center gap-6 pb-6 border-b border-brown-100">
-          <div className="w-24 h-24 bg-gradient-to-br from-brown-400 to-brown-600 rounded-2xl flex items-center justify-center text-white text-3xl font-serif shadow-soft">
-            {formData.name?.charAt(0) || <User className="w-12 h-12" />}
+          <div className="w-24 h-24 bg-gradient-to-br from-brown-400 to-brown-600 rounded-2xl flex items-center justify-center text-white text-3xl font-serif shadow-soft overflow-hidden">
+            {formData.photos && formData.photos.length > 0 ? (
+              <img src={formData.photos[0]} alt={formData.name} className="w-full h-full object-cover" />
+            ) : (
+              formData.name?.charAt(0) || <User className="w-12 h-12" />
+            )}
           </div>
           <div>
-            <p className="text-brown-500 text-sm mb-1">先人头像</p>
-            <p className="text-brown-400 text-xs">可在后续版本添加照片上传功能</p>
+            <p className="text-brown-500 text-sm mb-1">先人照片</p>
+            <p className="text-brown-400 text-xs">第一张照片将作为头像显示</p>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-brown-700 mb-2">
+            先人照片
+          </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              files.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  const result = ev.target?.result as string;
+                  if (result) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      photos: [...(prev.photos || []), result],
+                    }));
+                  }
+                };
+                reader.readAsDataURL(file);
+              });
+              if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+              }
+            }}
+            className="hidden"
+          />
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+            {(formData.photos || []).map((photo, index) => (
+              <div
+                key={index}
+                className="relative aspect-square rounded-xl overflow-hidden border border-brown-100 group"
+              >
+                <img
+                  src={photo}
+                  alt={`照片 ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      photos: prev.photos?.filter((_, i) => i !== index),
+                    }));
+                  }}
+                  className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+                {index === 0 && (
+                  <span className="absolute bottom-1 left-1 text-xs bg-gold-500 text-white px-1.5 py-0.5 rounded">
+                    头像
+                  </span>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="aspect-square rounded-xl border-2 border-dashed border-brown-200 flex flex-col items-center justify-center gap-1 text-brown-400 hover:text-brown-600 hover:border-brown-400 transition-colors"
+            >
+              <ImagePlus className="w-6 h-6" />
+              <span className="text-xs">添加照片</span>
+            </button>
           </div>
         </div>
 

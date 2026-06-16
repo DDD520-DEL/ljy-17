@@ -11,10 +11,13 @@ import {
   TrendingUp,
   Heart,
   CalendarClock,
-  MapPin
+  MapPin,
+  Camera,
+  ZoomIn,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getLunarCalendar, getAge, calculateDaysUntilFutureDate } from '@/utils/dateUtils';
+import { AlbumPhoto } from '@/types';
 
 export default function Dashboard() {
   const { ancestors, rituals, reservations, members, reminders } = useAppStore();
@@ -74,6 +77,36 @@ export default function Dashboard() {
     .filter(r => r.status === 'pending')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5);
+
+  const recentPhotos: AlbumPhoto[] = (() => {
+    const all: AlbumPhoto[] = [];
+    ancestors.forEach((ancestor) => {
+      (ancestor.photos || []).forEach((url) => {
+        all.push({
+          url,
+          sourceType: 'ancestor',
+          sourceId: ancestor.id,
+          sourceName: ancestor.name,
+          date: ancestor.createdAt,
+          description: `${ancestor.name} - ${ancestor.relationship}`,
+        });
+      });
+    });
+    rituals.forEach((ritual) => {
+      const ancestorName = ritual.ancestorName || ancestors.find((a) => a.id === ritual.ancestorId)?.name || '';
+      (ritual.photos || []).forEach((url) => {
+        all.push({
+          url,
+          sourceType: 'ritual',
+          sourceId: ritual.id,
+          sourceName: ancestorName,
+          date: ritual.date,
+          description: `${ancestorName} 祭祀 - ${ritual.location}`,
+        });
+      });
+    });
+    return all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 4);
+  })();
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -347,8 +380,12 @@ export default function Dashboard() {
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="flex items-center gap-4 mb-3">
-                <div className="w-14 h-14 bg-gradient-to-br from-brown-400 to-brown-600 rounded-full flex items-center justify-center text-white text-xl font-serif shadow-soft group-hover:scale-110 transition-transform">
-                  {ancestor.name.charAt(0)}
+                <div className="w-14 h-14 bg-gradient-to-br from-brown-400 to-brown-600 rounded-full flex items-center justify-center text-white text-xl font-serif shadow-soft group-hover:scale-110 transition-transform overflow-hidden">
+                  {ancestor.photos && ancestor.photos.length > 0 ? (
+                    <img src={ancestor.photos[0]} alt={ancestor.name} className="w-full h-full object-cover" />
+                  ) : (
+                    ancestor.name.charAt(0)
+                  )}
                 </div>
                 <div>
                   <h3 className="font-serif font-semibold text-brown-800 group-hover:text-gold-600 transition-colors">{ancestor.name}</h3>
@@ -368,6 +405,61 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
+      {recentPhotos.length > 0 && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="section-title mb-0">近期照片</h2>
+            <Link to="/album" className="text-sm text-brown-500 hover:text-brown-700 flex items-center gap-1">
+              查看全部 <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {recentPhotos.map((photo, index) => (
+              <Link
+                key={`${photo.sourceId}-${index}`}
+                to="/album"
+                className="group relative aspect-square rounded-2xl overflow-hidden border border-brown-100 hover:border-gold-300 transition-all duration-300 hover:shadow-card bg-cream-50"
+              >
+                <img
+                  src={photo.url}
+                  alt={photo.description}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <p className="text-white text-sm font-medium truncate">{photo.sourceName}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                        photo.sourceType === 'ancestor'
+                          ? 'bg-blue-500/80 text-white'
+                          : 'bg-gold-500/80 text-white'
+                      }`}>
+                        {photo.sourceType === 'ancestor' ? '先人' : '祭祀'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="absolute top-2 right-2">
+                    <div className="w-8 h-8 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <ZoomIn className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="mt-4 text-center">
+            <Link
+              to="/album"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brown-50 to-cream-100 text-brown-700 rounded-xl font-medium hover:from-brown-100 hover:to-cream-200 transition-all border border-brown-200"
+            >
+              <Camera className="w-4 h-4" />
+              进入家族相册
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

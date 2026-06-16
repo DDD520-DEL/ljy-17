@@ -5,10 +5,20 @@ export interface Ancestor {
   birthDate: string;
   deathDate: string;
   photo?: string;
+  photos?: string[];
   biography?: string;
   generation: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AlbumPhoto {
+  url: string;
+  sourceType: 'ancestor' | 'ritual';
+  sourceId: string;
+  sourceName: string;
+  date: string;
+  description?: string;
 }
 
 export interface Ritual {

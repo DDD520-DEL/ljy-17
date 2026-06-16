@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, Plus, X } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus, X, ImagePlus } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Ritual } from '@/types';
 
@@ -24,12 +24,14 @@ export default function RitualForm({ mode }: RitualFormProps) {
     participants: [],
     offerings: [],
     notes: '',
+    photos: [],
   });
   
   const [newParticipant, setNewParticipant] = useState('');
   const [newOffering, setNewOffering] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (mode === 'edit' && id) {
@@ -299,6 +301,72 @@ export default function RitualForm({ mode }: RitualFormProps) {
             placeholder="记录祭祀过程中的感想、天气、特殊情况等..."
             className="input-field resize-none"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-brown-700 mb-2">
+            祭祀现场照片
+          </label>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              files.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  const result = ev.target?.result as string;
+                  if (result) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      photos: [...(prev.photos || []), result],
+                    }));
+                  }
+                };
+                reader.readAsDataURL(file);
+              });
+              if (photoInputRef.current) {
+                photoInputRef.current.value = '';
+              }
+            }}
+            className="hidden"
+          />
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+            {(formData.photos || []).map((photo, index) => (
+              <div
+                key={index}
+                className="relative aspect-square rounded-xl overflow-hidden border border-brown-100 group"
+              >
+                <img
+                  src={photo}
+                  alt={`照片 ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      photos: prev.photos?.filter((_, i) => i !== index),
+                    }));
+                  }}
+                  className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              className="aspect-square rounded-xl border-2 border-dashed border-brown-200 flex flex-col items-center justify-center gap-1 text-brown-400 hover:text-brown-600 hover:border-brown-400 transition-colors"
+            >
+              <ImagePlus className="w-6 h-6" />
+              <span className="text-xs">添加照片</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-brown-100">

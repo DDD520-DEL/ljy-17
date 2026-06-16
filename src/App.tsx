@@ -11,6 +11,7 @@ import RitualTimeline from "@/pages/Timeline";
 import FamilyTree from "@/pages/FamilyTree";
 import MembersList from "@/pages/Members";
 import SettingsPage from "@/pages/Settings";
+import Album from "@/pages/Album";
 
 export default function App() {
   return (
@@ -36,6 +37,8 @@ export default function App() {
           <Route path="family-tree" element={<FamilyTree />} />
           
           <Route path="members" element={<MembersList />} />
+          
+          <Route path="album" element={<Album />} />
           
           <Route path="settings" element={<SettingsPage />} />
         </Route>
