@@ -45,6 +45,21 @@ export interface Ritual {
   createdAt: string;
 }
 
+export interface RitualTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  location: string;
+  participants: string[];
+  offerings: string[];
+  notes?: string;
+  ancestorId?: string;
+  ancestorName?: string;
+  branchId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface FamilyMember {
   id: string;
   name: string;
@@ -137,7 +152,7 @@ export interface SyncState {
   pendingChanges: number;
 }
 
-export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings';
+export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates';
 
 export interface ConflictItem {
   entityType: EntityType;
@@ -163,6 +178,7 @@ export interface CloudDataSnapshot {
   rituals: Ritual[];
   reservations: RitualReservation[];
   members: FamilyMember[];
+  templates: RitualTemplate[];
   settings: AppSettings;
   snapshotAt: string;
   version: number;

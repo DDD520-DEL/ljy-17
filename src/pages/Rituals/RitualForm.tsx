@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, Plus, X, ImagePlus } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus, X, ImagePlus, FileText, Check } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { Ritual } from '@/types';
+import { Ritual, RitualTemplate } from '@/types';
 
 interface RitualFormProps {
   mode: 'create' | 'edit';
@@ -13,8 +13,11 @@ export default function RitualForm({ mode }: RitualFormProps) {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const preselectedAncestorId = searchParams.get('ancestorId');
+  const templateId = searchParams.get('templateId');
   
-  const { addRitual, updateRitual, deleteRitual, rituals, ancestors, branches } = useAppStore();
+  const { addRitual, updateRitual, deleteRitual, rituals, ancestors, branches, templates } = useAppStore();
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<Partial<Ritual>>({
     ancestorId: preselectedAncestorId || '',
@@ -53,6 +56,32 @@ export default function RitualForm({ mode }: RitualFormProps) {
       }
     }
   }, [formData.ancestorId, ancestors]);
+
+  useEffect(() => {
+    if (mode === 'create' && templateId) {
+      const template = templates.find(t => t.id === templateId);
+      if (template) {
+        applyTemplate(template);
+      }
+    }
+  }, [mode, templateId, templates]);
+
+  const applyTemplate = (template: RitualTemplate) => {
+    setFormData(prev => ({
+      ...prev,
+      location: template.location,
+      participants: [...template.participants],
+      offerings: [...template.offerings],
+      notes: template.notes || prev.notes,
+      branchId: template.branchId || prev.branchId,
+      ...(template.ancestorId ? {
+        ancestorId: template.ancestorId,
+        ancestorName: template.ancestorName,
+      } : {}),
+    }));
+    setAppliedTemplate(template.id);
+    setShowTemplateSelector(false);
+  };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -137,6 +166,96 @@ export default function RitualForm({ mode }: RitualFormProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="card space-y-6">
+        {mode === 'create' && (
+          <div className="p-4 bg-cream-50 rounded-xl border border-brown-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gold-100 rounded-lg flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-gold-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-brown-800">使用祭祀模板</h3>
+                  <p className="text-sm text-brown-500">
+                    {appliedTemplate 
+                      ? `已应用模板：${templates.find(t => t.id === appliedTemplate)?.name}`
+                      : '选择预设模板快速填充信息'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {appliedTemplate && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                    <Check className="w-3.5 h-3.5" />
+                    已应用
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowTemplateSelector(!showTemplateSelector)}
+                  className="btn-secondary text-sm px-4 py-2"
+                >
+                  {appliedTemplate ? '更换模板' : '选择模板'}
+                </button>
+                <Link
+                  to="/ritual-templates/new"
+                  className="text-sm text-brown-600 hover:text-brown-800 underline"
+                  target="_blank"
+                >
+                  新建模板
+                </Link>
+              </div>
+            </div>
+
+            {showTemplateSelector && (
+              <div className="mt-4 pt-4 border-t border-brown-100">
+                {templates.length === 0 ? (
+                  <div className="text-center py-6 text-brown-500">
+                    <p>暂无可用模板</p>
+                    <Link
+                      to="/ritual-templates/new"
+                      className="inline-block mt-2 text-gold-600 hover:text-gold-700 underline text-sm"
+                      target="_blank"
+                    >
+                      创建第一个模板 →
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto scrollbar-thin">
+                    {templates.map((template) => (
+                      <div
+                        key={template.id}
+                        className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          appliedTemplate === template.id
+                            ? 'border-gold-500 bg-gold-50'
+                            : 'border-brown-200 hover:border-brown-400 bg-white'
+                        }`}
+                        onClick={() => applyTemplate(template)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-brown-800 truncate">{template.name}</h4>
+                            {template.description && (
+                              <p className="text-xs text-brown-500 mt-0.5 line-clamp-1">{template.description}</p>
+                            )}
+                            <div className="flex items-center gap-3 mt-2 text-xs text-brown-500">
+                              <span>📍 {template.location}</span>
+                              <span>👥 {template.participants.length}人</span>
+                              <span>🎁 {template.offerings.length}样</span>
+                            </div>
+                          </div>
+                          {appliedTemplate === template.id && (
+                            <Check className="w-5 h-5 text-gold-600 flex-shrink-0 ml-2" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-brown-700 mb-2">

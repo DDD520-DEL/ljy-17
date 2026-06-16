@@ -7,6 +7,8 @@ import AncestorDetail from "@/pages/Ancestors/AncestorDetail";
 import AncestorForm from "@/pages/Ancestors/AncestorForm";
 import RitualsList from "@/pages/Rituals";
 import RitualForm from "@/pages/Rituals/RitualForm";
+import RitualTemplatesList from "@/pages/RitualTemplates";
+import TemplateForm from "@/pages/RitualTemplates/TemplateForm";
 import ReservationsList from "@/pages/Reservations";
 import ReservationForm from "@/pages/Reservations/ReservationForm";
 import RitualTimeline from "@/pages/Timeline";
@@ -83,6 +85,10 @@ export default function App() {
           <Route path="rituals" element={<RitualsList />} />
           <Route path="rituals/new" element={<RitualForm mode="create" />} />
           <Route path="rituals/:id/edit" element={<RitualForm mode="edit" />} />
+          
+          <Route path="ritual-templates" element={<RitualTemplatesList />} />
+          <Route path="ritual-templates/new" element={<TemplateForm mode="create" />} />
+          <Route path="ritual-templates/:id/edit" element={<TemplateForm mode="edit" />} />
           
           <Route path="reservations" element={<ReservationsList />} />
           <Route path="reservations/new" element={<ReservationForm mode="create" />} />

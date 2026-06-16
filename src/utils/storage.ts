@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate } from '@/types';
 import { changeTracker } from '@/services/changeTracker';
 
 const STORAGE_KEYS = {
@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   RITUALS: 'family_rituals',
   RESERVATIONS: 'family_reservations',
   MEMBERS: 'family_members',
+  TEMPLATES: 'ritual_templates',
   SETTINGS: 'family_settings',
 };
 
@@ -266,6 +267,52 @@ export const storage = {
     return updated;
   },
 
+  getTemplates(): RitualTemplate[] {
+    const data = localStorage.getItem(STORAGE_KEYS.TEMPLATES);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setTemplates(templates: RitualTemplate[]): void {
+    localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(templates));
+  },
+
+  addTemplate(template: Omit<RitualTemplate, 'id' | 'createdAt' | 'updatedAt'>): RitualTemplate {
+    const templates = this.getTemplates();
+    const newTemplate: RitualTemplate = {
+      ...template,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    templates.push(newTemplate);
+    this.setTemplates(templates);
+    changeTracker.recordChange('templates', newTemplate.id, 'create');
+    return newTemplate;
+  },
+
+  updateTemplate(id: string, data: Partial<RitualTemplate>): RitualTemplate | null {
+    const templates = this.getTemplates();
+    const index = templates.findIndex(t => t.id === id);
+    if (index === -1) return null;
+    templates[index] = {
+      ...templates[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setTemplates(templates);
+    changeTracker.recordChange('templates', id, 'update');
+    return templates[index];
+  },
+
+  deleteTemplate(id: string): boolean {
+    const templates = this.getTemplates();
+    const filtered = templates.filter(t => t.id !== id);
+    if (filtered.length === templates.length) return false;
+    this.setTemplates(filtered);
+    changeTracker.recordChange('templates', id, 'delete');
+    return true;
+  },
+
   exportData(): string {
     const data = {
       branches: this.getBranches(),
@@ -273,6 +320,7 @@ export const storage = {
       rituals: this.getRituals(),
       reservations: this.getReservations(),
       members: this.getMembers(),
+      templates: this.getTemplates(),
       settings: this.getSettings(),
       exportedAt: new Date().toISOString(),
     };
@@ -287,6 +335,7 @@ export const storage = {
       if (data.rituals) this.setRituals(data.rituals);
       if (data.reservations) this.setReservations(data.reservations);
       if (data.members) this.setMembers(data.members);
+      if (data.templates) this.setTemplates(data.templates);
       if (data.settings) this.updateSettings(data.settings);
       return true;
     } catch {
@@ -300,6 +349,7 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.RITUALS);
     localStorage.removeItem(STORAGE_KEYS.RESERVATIONS);
     localStorage.removeItem(STORAGE_KEYS.MEMBERS);
+    localStorage.removeItem(STORAGE_KEYS.TEMPLATES);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
   },
 };

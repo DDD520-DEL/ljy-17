@@ -10,11 +10,12 @@ import {
   FamilyMember,
   AppSettings,
   CloudDataSnapshot,
+  RitualTemplate,
 } from '@/types';
 
 type EntityWithTimestamp = { id: string; updatedAt?: string; createdAt?: string };
 
-const ENTITY_TYPES: EntityType[] = ['branches', 'ancestors', 'rituals', 'reservations', 'members', 'settings'];
+const ENTITY_TYPES: EntityType[] = ['branches', 'ancestors', 'rituals', 'reservations', 'members', 'templates', 'settings'];
 
 const UPDATE_TIME_FIELDS: Record<EntityType, string> = {
   branches: 'updatedAt',
@@ -22,6 +23,7 @@ const UPDATE_TIME_FIELDS: Record<EntityType, string> = {
   rituals: 'createdAt',
   reservations: 'updatedAt',
   members: 'createdAt',
+  templates: 'updatedAt',
   settings: 'updatedAt',
 };
 
@@ -48,14 +50,7 @@ const findEntityDifferences = (local: { [key: string]: unknown }, remote: { [key
 };
 
 export const conflictDetector = {
-  detectConflicts(localData: {
-    branches: FamilyBranch[];
-    ancestors: Ancestor[];
-    rituals: Ritual[];
-    reservations: RitualReservation[];
-    members: FamilyMember[];
-    settings: AppSettings;
-  }, remoteSnapshot: CloudDataSnapshot | undefined): ConflictItem[] {
+  detectConflicts(localData: LocalDataShape, remoteSnapshot: CloudDataSnapshot | undefined): ConflictItem[] {
     const conflicts: ConflictItem[] = [];
     if (!remoteSnapshot) return conflicts;
 
@@ -192,6 +187,7 @@ type LocalDataShape = {
   rituals: Ritual[];
   reservations: RitualReservation[];
   members: FamilyMember[];
+  templates: RitualTemplate[];
   settings: AppSettings;
 };
 

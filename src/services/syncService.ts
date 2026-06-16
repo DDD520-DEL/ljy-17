@@ -7,6 +7,7 @@ import {
   RitualReservation,
   FamilyMember,
   AppSettings,
+  RitualTemplate,
 } from '@/types';
 import { authService } from './authService';
 
@@ -49,6 +50,7 @@ export const syncService = {
     rituals: Ritual[];
     reservations: RitualReservation[];
     members: FamilyMember[];
+    templates: RitualTemplate[];
     settings: AppSettings;
   }): Promise<{ success: boolean; snapshot?: CloudDataSnapshot; error?: string }> {
     await delay(700);
@@ -66,6 +68,7 @@ export const syncService = {
         rituals: data.rituals,
         reservations: data.reservations,
         members: data.members,
+        templates: data.templates,
         settings: data.settings,
         snapshotAt: new Date().toISOString(),
         version: getNextVersion(auth.userId),
@@ -100,6 +103,7 @@ export const syncService = {
     rituals: Ritual[];
     reservations: RitualReservation[];
     members: FamilyMember[];
+    templates: RitualTemplate[];
     settings: AppSettings;
   }): Promise<SyncResult> {
     await delay(1000);
@@ -120,6 +124,7 @@ export const syncService = {
           rituals: data.rituals,
           reservations: data.reservations,
           members: data.members,
+          templates: data.templates,
           settings: data.settings,
           snapshotAt: new Date().toISOString(),
           version: getNextVersion(auth.userId),
@@ -128,7 +133,7 @@ export const syncService = {
         return {
           success: true,
           syncedAt: newSnapshot.snapshotAt,
-          changesApplied: { local: 0, remote: data.branches.length + data.ancestors.length + data.rituals.length + data.reservations.length + data.members.length },
+          changesApplied: { local: 0, remote: data.branches.length + data.ancestors.length + data.rituals.length + data.reservations.length + data.members.length + data.templates.length },
         };
       }
 
@@ -148,6 +153,7 @@ export const syncService = {
     rituals: Ritual[];
     reservations: RitualReservation[];
     members: FamilyMember[];
+    templates: RitualTemplate[];
     settings: AppSettings;
   }): Promise<{ success: boolean; snapshot?: CloudDataSnapshot; error?: string }> {
     return this.uploadSnapshot(data);

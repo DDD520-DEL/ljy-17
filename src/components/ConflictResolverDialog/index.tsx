@@ -25,6 +25,7 @@ const ENTITY_NAMES: Record<EntityType, string> = {
   rituals: '祭祀记录',
   reservations: '祭祀预约',
   members: '家族成员',
+  templates: '祭祀模板',
   settings: '系统设置',
 };
 
