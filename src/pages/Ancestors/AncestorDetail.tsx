@@ -42,6 +42,7 @@ const buildTree = (members: FamilyMember[], generation: number): TreeNode[] => {
       birthDate: member.birthDate,
       avatar: member.avatar,
       generation: member.generation,
+      branchId: member.branchId,
       children,
       spouse: spouse ? {
         id: spouse.id,

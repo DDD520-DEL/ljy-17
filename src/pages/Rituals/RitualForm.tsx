@@ -14,7 +14,7 @@ export default function RitualForm({ mode }: RitualFormProps) {
   const [searchParams] = useSearchParams();
   const preselectedAncestorId = searchParams.get('ancestorId');
   
-  const { addRitual, updateRitual, deleteRitual, rituals, ancestors } = useAppStore();
+  const { addRitual, updateRitual, deleteRitual, rituals, ancestors, branches } = useAppStore();
   
   const [formData, setFormData] = useState<Partial<Ritual>>({
     ancestorId: preselectedAncestorId || '',
@@ -25,6 +25,7 @@ export default function RitualForm({ mode }: RitualFormProps) {
     offerings: [],
     notes: '',
     photos: [],
+    branchId: '',
   });
   
   const [newParticipant, setNewParticipant] = useState('');
@@ -181,6 +182,22 @@ export default function RitualForm({ mode }: RitualFormProps) {
             />
             {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-brown-700 mb-2">
+            所属分支
+          </label>
+          <select
+            value={formData.branchId || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value || undefined }))}
+            className="input-field"
+          >
+            <option value="">未分配</option>
+            {branches.map(branch => (
+              <option key={branch.id} value={branch.id}>{branch.name}</option>
+            ))}
+          </select>
         </div>
 
         <div>
