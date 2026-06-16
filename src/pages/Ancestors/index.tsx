@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Plus, Search, Edit3, Calendar, User, Heart } from 'lucide-react';
+import { Plus, Search, Edit3, Calendar, User, Heart, ChevronRight } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getAge, getLunarCalendar, getGenerationName } from '@/utils/dateUtils';
 
@@ -106,7 +106,10 @@ export default function AncestorsList() {
               className="card group"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div className="flex items-start gap-4 mb-4">
+              <Link
+                to={`/ancestors/${ancestor.id}`}
+                className="flex items-start gap-4 mb-4 block"
+              >
                 <div className="w-16 h-16 bg-gradient-to-br from-brown-400 to-brown-600 rounded-2xl flex items-center justify-center text-white text-2xl font-serif shadow-soft group-hover:scale-110 transition-transform overflow-hidden">
                   {ancestor.photos && ancestor.photos.length > 0 ? (
                     <img src={ancestor.photos[0]} alt={ancestor.name} className="w-full h-full object-cover" />
@@ -116,15 +119,10 @@ export default function AncestorsList() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-lg font-semibold text-brown-800 truncate">
+                    <h3 className="font-serif text-lg font-semibold text-brown-800 truncate group-hover:text-gold-600 transition-colors">
                       {ancestor.name}
                     </h3>
-                    <Link
-                      to={`/ancestors/${ancestor.id}/edit`}
-                      className="p-2 opacity-0 group-hover:opacity-100 hover:bg-brown-100 rounded-lg transition-all"
-                    >
-                      <Edit3 className="w-4 h-4 text-brown-500" />
-                    </Link>
+                    <ChevronRight className="w-5 h-5 text-brown-300 group-hover:text-gold-500 group-hover:translate-x-1 transition-all opacity-0 group-hover:opacity-100" />
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-sm text-brown-500">{ancestor.relationship}</span>
@@ -133,7 +131,7 @@ export default function AncestorsList() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </Link>
 
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-3 text-sm">
@@ -166,13 +164,29 @@ export default function AncestorsList() {
               )}
 
               <div className="pt-4 mt-4 border-t border-brown-100">
-                <Link
-                  to={`/rituals/new?ancestorId=${ancestor.id}`}
-                  className="w-full btn-secondary text-center flex items-center justify-center gap-2 text-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  记录祭祀
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to={`/ancestors/${ancestor.id}`}
+                    className="flex-1 btn-secondary text-center flex items-center justify-center gap-2 text-sm"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                    查看详情
+                  </Link>
+                  <Link
+                    to={`/ancestors/${ancestor.id}/edit`}
+                    className="px-3 py-2.5 text-brown-600 hover:bg-brown-100 rounded-lg transition-colors"
+                    title="编辑"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    to={`/rituals/new?ancestorId=${ancestor.id}`}
+                    className="px-3 py-2.5 text-gold-600 hover:bg-gold-50 rounded-lg transition-colors"
+                    title="记录祭祀"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
             </div>
           ))}

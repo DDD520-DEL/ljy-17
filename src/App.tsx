@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "@/components/Layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import AncestorsList from "@/pages/Ancestors";
+import AncestorDetail from "@/pages/Ancestors/AncestorDetail";
 import AncestorForm from "@/pages/Ancestors/AncestorForm";
 import RitualsList from "@/pages/Rituals";
 import RitualForm from "@/pages/Rituals/RitualForm";
@@ -22,6 +23,7 @@ export default function App() {
           
           <Route path="ancestors" element={<AncestorsList />} />
           <Route path="ancestors/new" element={<AncestorForm mode="create" />} />
+          <Route path="ancestors/:id" element={<AncestorDetail />} />
           <Route path="ancestors/:id/edit" element={<AncestorForm mode="edit" />} />
           
           <Route path="rituals" element={<RitualsList />} />
