@@ -45,14 +45,30 @@ export interface AppSettings {
   notificationEnabled: boolean;
 }
 
+export interface RitualReservation {
+  id: string;
+  ancestorId: string;
+  ancestorName: string;
+  date: string;
+  location: string;
+  participants: string[];
+  offerings: string[];
+  notes?: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ReminderItem {
   id: string;
   ancestorId: string;
   ancestorName: string;
-  type: 'birth' | 'death';
+  type: 'birth' | 'death' | 'reservation';
   date: string;
   daysLeft: number;
   dateStr: string;
+  reservationId?: string;
+  location?: string;
 }
 
 export interface TreeNode {

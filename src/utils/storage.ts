@@ -1,8 +1,9 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation } from '@/types';
 
 const STORAGE_KEYS = {
   ANCESTORS: 'family_ancestors',
   RITUALS: 'family_rituals',
+  RESERVATIONS: 'family_reservations',
   MEMBERS: 'family_members',
   SETTINGS: 'family_settings',
 };
@@ -133,6 +134,49 @@ export const storage = {
     return true;
   },
 
+  getReservations(): RitualReservation[] {
+    const data = localStorage.getItem(STORAGE_KEYS.RESERVATIONS);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setReservations(reservations: RitualReservation[]): void {
+    localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify(reservations));
+  },
+
+  addReservation(reservation: Omit<RitualReservation, 'id' | 'createdAt' | 'updatedAt'>): RitualReservation {
+    const reservations = this.getReservations();
+    const newReservation: RitualReservation = {
+      ...reservation,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    reservations.push(newReservation);
+    this.setReservations(reservations);
+    return newReservation;
+  },
+
+  updateReservation(id: string, data: Partial<RitualReservation>): RitualReservation | null {
+    const reservations = this.getReservations();
+    const index = reservations.findIndex(r => r.id === id);
+    if (index === -1) return null;
+    reservations[index] = {
+      ...reservations[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setReservations(reservations);
+    return reservations[index];
+  },
+
+  deleteReservation(id: string): boolean {
+    const reservations = this.getReservations();
+    const filtered = reservations.filter(r => r.id !== id);
+    if (filtered.length === reservations.length) return false;
+    this.setReservations(filtered);
+    return true;
+  },
+
   getSettings(): AppSettings {
     const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     return data ? JSON.parse(data) : defaultSettings;
@@ -149,6 +193,7 @@ export const storage = {
     const data = {
       ancestors: this.getAncestors(),
       rituals: this.getRituals(),
+      reservations: this.getReservations(),
       members: this.getMembers(),
       settings: this.getSettings(),
       exportedAt: new Date().toISOString(),
@@ -161,6 +206,7 @@ export const storage = {
       const data = JSON.parse(jsonStr);
       if (data.ancestors) this.setAncestors(data.ancestors);
       if (data.rituals) this.setRituals(data.rituals);
+      if (data.reservations) this.setReservations(data.reservations);
       if (data.members) this.setMembers(data.members);
       if (data.settings) this.updateSettings(data.settings);
       return true;
@@ -172,6 +218,7 @@ export const storage = {
   clearAllData(): void {
     localStorage.removeItem(STORAGE_KEYS.ANCESTORS);
     localStorage.removeItem(STORAGE_KEYS.RITUALS);
+    localStorage.removeItem(STORAGE_KEYS.RESERVATIONS);
     localStorage.removeItem(STORAGE_KEYS.MEMBERS);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
   },

@@ -1,4 +1,51 @@
-import { Ancestor, Ritual, FamilyMember } from '@/types';
+import { Ancestor, Ritual, FamilyMember, RitualReservation } from '@/types';
+
+const getFutureDate = (daysFromNow: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().split('T')[0];
+};
+
+export const mockReservations: RitualReservation[] = [
+  {
+    id: '1',
+    ancestorId: '3',
+    ancestorName: '张爷爷',
+    date: getFutureDate(5),
+    location: '南山陵园A区12号',
+    participants: ['张三', '李四', '张小明'],
+    offerings: ['水果', '糕点', '白酒', '香烛', '纸钱'],
+    notes: '提前准备好供品，通知家属集合时间。',
+    status: 'pending',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: '2',
+    ancestorId: '1',
+    ancestorName: '张老太爷',
+    date: getFutureDate(14),
+    location: '家中祠堂',
+    participants: ['张大山', '张三', '张大爷', '张小明', '张小红'],
+    offerings: ['三牲', '水果', '清茶', '香烛'],
+    notes: '家族聚会，安排好食宿。',
+    status: 'pending',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: '3',
+    ancestorId: '4',
+    ancestorName: '张奶奶',
+    date: getFutureDate(30),
+    location: '南山陵园A区13号',
+    participants: ['张三', '张小红'],
+    offerings: ['鲜花', '水果', '糕点'],
+    status: 'pending',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+];
 
 export const mockAncestors: Ancestor[] = [
   {
@@ -175,6 +222,11 @@ export const initializeMockData = (): void => {
   const existingRituals = localStorage.getItem('family_rituals');
   if (!existingRituals || JSON.parse(existingRituals).length === 0) {
     localStorage.setItem('family_rituals', JSON.stringify(mockRituals));
+  }
+  
+  const existingReservations = localStorage.getItem('family_reservations');
+  if (!existingReservations || JSON.parse(existingReservations).length === 0) {
+    localStorage.setItem('family_reservations', JSON.stringify(mockReservations));
   }
   
   const existingMembers = localStorage.getItem('family_members');

@@ -9,13 +9,17 @@ import {
   Clock,
   ChevronRight,
   TrendingUp,
-  Heart
+  Heart,
+  CalendarClock,
+  MapPin
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { formatDate, getLunarCalendar, getAge } from '@/utils/dateUtils';
+import { formatDate, getLunarCalendar, getAge, calculateDaysUntilFutureDate } from '@/utils/dateUtils';
 
 export default function Dashboard() {
-  const { ancestors, rituals, members, reminders } = useAppStore();
+  const { ancestors, rituals, reservations, members, reminders } = useAppStore();
+  
+  const pendingReservations = reservations.filter(r => r.status === 'pending').length;
   
   const stats = [
     { 
@@ -26,37 +30,50 @@ export default function Dashboard() {
       bg: 'bg-orange-50'
     },
     { 
-      label: '祭祀记录', 
-      value: rituals.length, 
-      icon: ScrollText, 
-      color: 'from-blue-400 to-indigo-500',
-      bg: 'bg-blue-50'
-    },
-    { 
-      label: '家族成员', 
-      value: members.length, 
-      icon: Users, 
-      color: 'from-green-400 to-emerald-500',
-      bg: 'bg-green-50'
-    },
-    { 
       label: '待办提醒', 
       value: reminders.length, 
       icon: Clock, 
       color: 'from-amber-400 to-orange-500',
       bg: 'bg-amber-50'
     },
+    { 
+      label: '祭祀预约', 
+      value: pendingReservations, 
+      icon: CalendarClock, 
+      color: 'from-blue-400 to-indigo-500',
+      bg: 'bg-blue-50'
+    },
+    { 
+      label: '祭祀记录', 
+      value: rituals.length, 
+      icon: ScrollText, 
+      color: 'from-emerald-400 to-green-500',
+      bg: 'bg-green-50'
+    },
+    { 
+      label: '家族成员', 
+      value: members.length, 
+      icon: Users, 
+      color: 'from-purple-400 to-pink-500',
+      bg: 'bg-purple-50'
+    },
   ];
 
   const quickActions = [
     { label: '添加先人', icon: Flame, path: '/ancestors/new', color: 'text-orange-600 bg-orange-50 hover:bg-orange-100' },
-    { label: '记录祭祀', icon: CalendarDays, path: '/rituals/new', color: 'text-blue-600 bg-blue-50 hover:bg-blue-100' },
+    { label: '祭祀预约', icon: CalendarClock, path: '/reservations/new', color: 'text-blue-600 bg-blue-50 hover:bg-blue-100' },
+    { label: '记录祭祀', icon: CalendarDays, path: '/rituals/new', color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100' },
     { label: '查看族谱', icon: TreeDeciduous, path: '/family-tree', color: 'text-green-600 bg-green-50 hover:bg-green-100' },
     { label: '家属管理', icon: Users, path: '/members', color: 'text-purple-600 bg-purple-50 hover:bg-purple-100' },
   ];
 
-  const upcomingReminders = reminders.slice(0, 5);
+  const upcomingReminders = reminders.slice(0, 6);
   const recentRituals = [...rituals].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 3);
+  
+  const upcomingReservations = [...reservations]
+    .filter(r => r.status === 'pending')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 5);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -83,7 +100,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -92,31 +109,29 @@ export default function Dashboard() {
               className="stat-card"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-brown-500 text-sm mb-1">{stat.label}</p>
-                  <p className="text-4xl font-bold text-brown-800 font-serif">{stat.value}</p>
+              <div className="flex flex-col items-center text-center">
+                <div className={`p-3 rounded-xl ${stat.bg} mb-3`}>
+                  <Icon className={`w-7 h-7 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`} />
                 </div>
-                <div className={`p-3 rounded-xl ${stat.bg}`}>
-                  <Icon className={`w-6 h-6 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`} />
-                </div>
+                <p className="text-3xl font-bold text-brown-800 font-serif mb-1">{stat.value}</p>
+                <p className="text-brown-500 text-xs">{stat.label}</p>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
             <Link
               key={action.path}
               to={action.path}
-              className={`flex flex-col items-center gap-3 p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-card ${action.color}`}
+              className={`flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-card ${action.color}`}
             >
-              <Icon className="w-8 h-8" />
-              <span className="font-medium text-sm">{action.label}</span>
+              <Icon className="w-6 h-6" />
+              <span className="font-medium text-xs text-center">{action.label}</span>
             </Link>
           );
         })}
@@ -126,7 +141,7 @@ export default function Dashboard() {
         <div className="card">
           <div className="flex items-center justify-between mb-6">
             <h2 className="section-title mb-0">即将到来</h2>
-            <Link to="/" className="text-sm text-brown-500 hover:text-brown-700 flex items-center gap-1">
+            <Link to="/reservations" className="text-sm text-brown-500 hover:text-brown-700 flex items-center gap-1">
               查看全部 <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
@@ -134,41 +149,138 @@ export default function Dashboard() {
           {upcomingReminders.length === 0 ? (
             <div className="text-center py-12 text-brown-400">
               <div className="text-5xl mb-3">🕊️</div>
-              <p>近期暂无纪念日</p>
+              <p>近期暂无纪念日和预约</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {upcomingReminders.map((reminder, index) => (
                 <div 
                   key={reminder.id}
                   className={`flex items-center gap-4 p-4 rounded-xl transition-colors ${
-                    reminder.daysLeft <= 3 ? 'bg-red-50 border border-red-100' : 'bg-cream-50 border border-brown-100'
+                    reminder.daysLeft <= 3 ? 'bg-red-50 border border-red-100' : 
+                    reminder.type === 'reservation' ? 'bg-blue-50 border border-blue-100' :
+                    'bg-cream-50 border border-brown-100'
                   }`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center ${
-                    reminder.daysLeft <= 3 ? 'bg-red-100 text-red-600' : 'bg-gold-100 text-gold-600'
+                    reminder.daysLeft <= 3 ? 'bg-red-100 text-red-600' : 
+                    reminder.type === 'reservation' ? 'bg-blue-100 text-blue-600' :
+                    'bg-gold-100 text-gold-600'
                   }`}>
                     <span className="text-2xl font-bold">{reminder.daysLeft || '今'}</span>
                     <span className="text-xs">天</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-medium text-brown-800 truncate">{reminder.ancestorName}</h3>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
                         reminder.type === 'birth' 
                           ? 'bg-green-100 text-green-700' 
-                          : 'bg-purple-100 text-purple-700'
+                          : reminder.type === 'death'
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-blue-100 text-blue-700'
                       }`}>
-                        {reminder.type === 'birth' ? '诞辰' : '忌日'}
+                        {reminder.type === 'birth' ? '诞辰' : 
+                         reminder.type === 'death' ? '忌日' : '预约祭祀'}
                       </span>
                     </div>
                     <p className="text-sm text-brown-500 mt-0.5">{reminder.dateStr}</p>
+                    {reminder.location && (
+                      <p className="text-xs text-blue-600 mt-0.5 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {reminder.location}
+                      </p>
+                    )}
                     <p className="text-xs text-brown-400 mt-0.5">农历 {getLunarCalendar(reminder.date)}</p>
                   </div>
                   <ChevronRight className="w-5 h-5 text-brown-300" />
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="section-title mb-0">预约祭祀</h2>
+            <Link to="/reservations" className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
+              管理预约 <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+          
+          {upcomingReservations.length === 0 ? (
+            <div className="text-center py-12 text-brown-400">
+              <div className="text-5xl mb-3">📅</div>
+              <p>暂无祭祀预约</p>
+              <Link to="/reservations/new" className="inline-block mt-3 text-blue-600 hover:text-blue-700 text-sm underline">
+                创建第一个预约
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {upcomingReservations.map((reservation, index) => {
+                const daysLeft = calculateDaysUntilFutureDate(reservation.date);
+                const isUrgent = daysLeft >= 0 && daysLeft <= 3;
+                const isOverdue = daysLeft < 0;
+                return (
+                  <Link
+                    key={reservation.id}
+                    to={`/reservations/${reservation.id}/edit`}
+                    className={`flex items-center gap-4 p-4 rounded-xl transition-all hover:shadow-md ${
+                      isUrgent ? 'bg-red-50 border border-red-100' : 
+                      isOverdue ? 'bg-orange-50 border border-orange-100' :
+                      'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 hover:border-blue-200'
+                    }`}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${
+                      isUrgent ? 'bg-red-100 text-red-600' : 
+                      isOverdue ? 'bg-orange-100 text-orange-600' :
+                      'bg-blue-100 text-blue-600'
+                    }`}>
+                      <CalendarClock className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-brown-800 truncate">
+                          {reservation.ancestorName} 祭祀
+                        </h3>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          isOverdue 
+                            ? 'bg-orange-100 text-orange-700'
+                            : isUrgent 
+                              ? 'bg-red-100 text-red-700' 
+                              : daysLeft <= 7 
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {isOverdue ? `逾期 ${Math.abs(daysLeft)} 天` : daysLeft === 0 ? '今天' : `${daysLeft} 天后`}
+                        </span>
+                      </div>
+                      <p className="text-sm text-brown-500 mt-0.5 flex items-center gap-1">
+                        <CalendarDays className="w-3.5 h-3.5" />
+                        {formatDate(reservation.date)}
+                      </p>
+                      <p className="text-xs text-brown-400 mt-0.5 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {reservation.location}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {reservation.participants.slice(0, 3).map((p, i) => (
+                          <span key={i} className="text-xs bg-white px-2 py-0.5 rounded-full text-brown-600 border border-brown-100">
+                            {p}
+                          </span>
+                        ))}
+                        {reservation.participants.length > 3 && (
+                          <span className="text-xs text-brown-400">+{reservation.participants.length - 3}人</span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-blue-400" />
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

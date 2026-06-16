@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
   Home,
   Users,
@@ -8,12 +8,14 @@ import {
   UserCircle,
   Settings,
   Flame,
+  CalendarClock,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
 const navItems = [
   { path: '/', icon: Home, label: '首页', end: true },
   { path: '/ancestors', icon: Flame, label: '先人管理' },
+  { path: '/reservations', icon: CalendarClock, label: '祭祀预约' },
   { path: '/rituals', icon: CalendarDays, label: '祭祀记录' },
   { path: '/timeline', icon: ScrollText, label: '祭祀年表' },
   { path: '/family-tree', icon: TreeDeciduous, label: '族谱展示' },
@@ -23,8 +25,9 @@ const navItems = [
 
 export default function Sidebar() {
   const location = useLocation();
-  const reminders = useAppStore(state => state.reminders);
+  const { reminders, reservations } = useAppStore();
   const urgentCount = reminders.filter(r => r.daysLeft <= 3).length;
+  const pendingReservationsCount = reservations.filter(r => r.status === 'pending').length;
 
   return (
     <aside className="w-64 min-h-screen bg-gradient-to-b from-brown-50 to-cream-100 border-r border-brown-200 flex flex-col">
@@ -68,10 +71,16 @@ export default function Sidebar() {
       <div className="p-4 border-t border-brown-200">
         <div className="bg-gradient-to-r from-brown-100 to-cream-100 rounded-xl p-4">
           <p className="text-sm text-brown-600 mb-2">💡 温馨提示</p>
-          <p className="text-xs text-brown-500">
+          <p className="text-xs text-brown-500 mb-2">
             近期有 {reminders.length} 个纪念日即将到来，
+            {pendingReservationsCount > 0 && ` 另有 ${pendingReservationsCount} 个预约待进行，`}
             请提前做好祭扫准备。
           </p>
+          {pendingReservationsCount > 0 && (
+            <Link to="/reservations" className="text-xs text-blue-600 hover:text-blue-700 underline">
+              查看预约 →
+            </Link>
+          )}
         </div>
       </div>
     </aside>

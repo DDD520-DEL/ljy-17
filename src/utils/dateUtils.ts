@@ -1,4 +1,4 @@
-import { Ancestor, ReminderItem } from '@/types';
+import { Ancestor, ReminderItem, RitualReservation } from '@/types';
 
 export const formatDate = (dateStr: string, format: 'full' | 'short' | 'year' = 'full'): string => {
   if (!dateStr) return '';
@@ -133,6 +133,16 @@ export const calculateDaysUntil = (targetDateStr: string): number => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
+export const calculateDaysUntilFutureDate = (targetDateStr: string): number => {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const target = new Date(targetDateStr);
+  target.setHours(0, 0, 0, 0);
+  
+  const diffTime = target.getTime() - now.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
 export const getAge = (birthDate: string, deathDate?: string): number => {
   const birth = new Date(birthDate);
   const end = deathDate ? new Date(deathDate) : new Date();
@@ -144,7 +154,11 @@ export const getAge = (birthDate: string, deathDate?: string): number => {
   return age;
 };
 
-export const getReminders = (ancestors: Ancestor[], reminderDays: number): ReminderItem[] => {
+export const getReminders = (
+  ancestors: Ancestor[],
+  reminderDays: number,
+  reservations: RitualReservation[] = []
+): ReminderItem[] => {
   const reminders: ReminderItem[] = [];
   
   ancestors.forEach(ancestor => {
@@ -171,6 +185,25 @@ export const getReminders = (ancestors: Ancestor[], reminderDays: number): Remin
         date: ancestor.deathDate,
         daysLeft: deathDays,
         dateStr: formatDate(ancestor.deathDate, 'short'),
+      });
+    }
+  });
+  
+  reservations.forEach(reservation => {
+    if (reservation.status !== 'pending') return;
+    
+    const daysLeft = calculateDaysUntilFutureDate(reservation.date);
+    if (daysLeft >= 0 && daysLeft <= reminderDays) {
+      reminders.push({
+        id: `reservation-${reservation.id}`,
+        ancestorId: reservation.ancestorId,
+        ancestorName: reservation.ancestorName,
+        type: 'reservation',
+        date: reservation.date,
+        daysLeft,
+        dateStr: formatDate(reservation.date, 'short'),
+        reservationId: reservation.id,
+        location: reservation.location,
       });
     }
   });

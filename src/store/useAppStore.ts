@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Ancestor, Ritual, FamilyMember, AppSettings, ReminderItem } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, ReminderItem, RitualReservation } from '@/types';
 import { storage } from '@/utils/storage';
 import { getReminders } from '@/utils/dateUtils';
 import { initializeMockData } from '@/utils/mockData';
@@ -7,6 +7,7 @@ import { initializeMockData } from '@/utils/mockData';
 interface AppState {
   ancestors: Ancestor[];
   rituals: Ritual[];
+  reservations: RitualReservation[];
   members: FamilyMember[];
   settings: AppSettings;
   reminders: ReminderItem[];
@@ -25,6 +26,11 @@ interface AppState {
   updateRitual: (id: string, data: Partial<Ritual>) => Ritual | null;
   deleteRitual: (id: string) => boolean;
   
+  addReservation: (reservation: Omit<RitualReservation, 'id' | 'createdAt' | 'updatedAt'>) => RitualReservation;
+  updateReservation: (id: string, data: Partial<RitualReservation>) => RitualReservation | null;
+  deleteReservation: (id: string) => boolean;
+  completeReservation: (id: string) => Ritual | null;
+  
   addMember: (member: Omit<FamilyMember, 'id' | 'createdAt'>) => FamilyMember;
   updateMember: (id: string, data: Partial<FamilyMember>) => FamilyMember | null;
   deleteMember: (id: string) => boolean;
@@ -39,6 +45,7 @@ interface AppState {
 export const useAppStore = create<AppState>((set, get) => ({
   ancestors: [],
   rituals: [],
+  reservations: [],
   members: [],
   settings: {
     reminderDays: 7,
@@ -56,14 +63,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     
     const ancestors = storage.getAncestors();
     const rituals = storage.getRituals();
+    const reservations = storage.getReservations();
     const members = storage.getMembers();
     const settings = storage.getSettings();
     
-    const reminders = getReminders(ancestors, settings.reminderDays);
+    const reminders = getReminders(ancestors, settings.reminderDays, reservations);
     
     set({
       ancestors,
       rituals,
+      reservations,
       members,
       settings,
       reminders,
@@ -72,8 +81,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   
   refreshReminders: () => {
-    const { ancestors, settings } = get();
-    const reminders = getReminders(ancestors, settings.reminderDays);
+    const { ancestors, settings, reservations } = get();
+    const reminders = getReminders(ancestors, settings.reminderDays, reservations);
     set({ reminders });
   },
   
@@ -84,7 +93,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   addAncestor: (ancestor) => {
     const newAncestor = storage.addAncestor(ancestor);
     const ancestors = storage.getAncestors();
-    const reminders = getReminders(ancestors, get().settings.reminderDays);
+    const { settings, reservations } = get();
+    const reminders = getReminders(ancestors, settings.reminderDays, reservations);
     set({ ancestors, reminders });
     return newAncestor;
   },
@@ -93,7 +103,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     const updated = storage.updateAncestor(id, data);
     if (updated) {
       const ancestors = storage.getAncestors();
-      const reminders = getReminders(ancestors, get().settings.reminderDays);
+      const { settings, reservations } = get();
+      const reminders = getReminders(ancestors, settings.reminderDays, reservations);
       set({ ancestors, reminders });
     }
     return updated;
@@ -104,9 +115,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (success) {
       const ancestors = storage.getAncestors();
       const rituals = storage.getRituals().filter(r => r.ancestorId !== id);
+      const reservations = storage.getReservations().filter(r => r.ancestorId !== id);
       storage.setRituals(rituals);
-      const reminders = getReminders(ancestors, get().settings.reminderDays);
-      set({ ancestors, rituals, reminders });
+      storage.setReservations(reservations);
+      const { settings } = get();
+      const reminders = getReminders(ancestors, settings.reminderDays, reservations);
+      set({ ancestors, rituals, reservations, reminders });
     }
     return success;
   },
@@ -136,6 +150,63 @@ export const useAppStore = create<AppState>((set, get) => ({
     return success;
   },
   
+  addReservation: (reservation) => {
+    const newReservation = storage.addReservation(reservation);
+    const reservations = storage.getReservations();
+    const { ancestors, settings } = get();
+    const reminders = getReminders(ancestors, settings.reminderDays, reservations);
+    set({ reservations, reminders });
+    return newReservation;
+  },
+  
+  updateReservation: (id, data) => {
+    const updated = storage.updateReservation(id, data);
+    if (updated) {
+      const reservations = storage.getReservations();
+      const { ancestors, settings } = get();
+      const reminders = getReminders(ancestors, settings.reminderDays, reservations);
+      set({ reservations, reminders });
+    }
+    return updated;
+  },
+  
+  deleteReservation: (id) => {
+    const success = storage.deleteReservation(id);
+    if (success) {
+      const reservations = storage.getReservations();
+      const { ancestors, settings } = get();
+      const reminders = getReminders(ancestors, settings.reminderDays, reservations);
+      set({ reservations, reminders });
+    }
+    return success;
+  },
+  
+  completeReservation: (id) => {
+    const reservation = storage.getReservations().find(r => r.id === id);
+    if (!reservation) return null;
+    
+    const updatedReservation = storage.updateReservation(id, { status: 'completed' });
+    if (!updatedReservation) return null;
+    
+    const newRitual = storage.addRitual({
+      ancestorId: reservation.ancestorId,
+      ancestorName: reservation.ancestorName,
+      date: reservation.date,
+      location: reservation.location,
+      participants: reservation.participants,
+      offerings: reservation.offerings,
+      notes: reservation.notes,
+    });
+    
+    const reservations = storage.getReservations();
+    const rituals = storage.getRituals();
+    const { ancestors, settings } = get();
+    const reminders = getReminders(ancestors, settings.reminderDays, reservations);
+    set({ reservations, rituals, reminders });
+    
+    return newRitual;
+  },
+  
   addMember: (member) => {
     const newMember = storage.addMember(member);
     const members = storage.getMembers();
@@ -163,7 +234,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   
   updateSettings: (settings) => {
     const updated = storage.updateSettings(settings);
-    const reminders = getReminders(get().ancestors, updated.reminderDays);
+    const { ancestors, reservations } = get();
+    const reminders = getReminders(ancestors, updated.reminderDays, reservations);
     set({ settings: updated, reminders });
     return updated;
   },
@@ -177,10 +249,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (success) {
       const ancestors = storage.getAncestors();
       const rituals = storage.getRituals();
+      const reservations = storage.getReservations();
       const members = storage.getMembers();
       const settings = storage.getSettings();
-      const reminders = getReminders(ancestors, settings.reminderDays);
-      set({ ancestors, rituals, members, settings, reminders });
+      const reminders = getReminders(ancestors, settings.reminderDays, reservations);
+      set({ ancestors, rituals, reservations, members, settings, reminders });
     }
     return success;
   },
@@ -190,6 +263,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       ancestors: [],
       rituals: [],
+      reservations: [],
       members: [],
       settings: {
         reminderDays: 7,
