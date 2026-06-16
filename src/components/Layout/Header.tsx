@@ -66,7 +66,8 @@ export default function Header({ onMenuToggle, isMobileMenuOpen }: HeaderProps) 
     rituals.forEach(r => {
       if (r.location.toLowerCase().includes(term) || r.ancestorName.toLowerCase().includes(term) ||
           r.participants.some(p => p.toLowerCase().includes(term)) ||
-          r.offerings.some(o => o.toLowerCase().includes(term))) {
+          r.offerings.some(o => o.toLowerCase().includes(term)) ||
+          (r.notes && r.notes.toLowerCase().includes(term))) {
         results.push({
           type: 'ritual',
           item: r,
@@ -78,7 +79,8 @@ export default function Header({ onMenuToggle, isMobileMenuOpen }: HeaderProps) 
     });
 
     members.forEach(m => {
-      if (m.name.toLowerCase().includes(term) || m.relationship.toLowerCase().includes(term)) {
+      if (m.name.toLowerCase().includes(term) || m.relationship.toLowerCase().includes(term) ||
+          (m.phone && m.phone.toLowerCase().includes(term))) {
         results.push({
           type: 'member',
           item: m,
@@ -98,7 +100,7 @@ export default function Header({ onMenuToggle, isMobileMenuOpen }: HeaderProps) 
     setGlobalSearchTerm(e.target.value);
   };
 
-  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchTerm.trim()) {
       e.preventDefault();
       handleSearchNavigate();
@@ -154,7 +156,7 @@ export default function Header({ onMenuToggle, isMobileMenuOpen }: HeaderProps) 
             placeholder="搜索先人、活动、家属..."
             value={searchTerm}
             onChange={handleSearchChange}
-            onKeyPress={handleSearchKeyPress}
+            onKeyDown={handleSearchKeyDown}
             onFocus={() => searchTerm.trim() && setShowSearchResults(true)}
             className="pl-10 pr-4 py-2 w-64 bg-cream-50 border border-brown-200 rounded-lg text-sm focus:bg-white focus:border-brown-400 focus:outline-none transition-all"
           />
