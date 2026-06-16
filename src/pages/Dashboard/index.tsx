@@ -20,9 +20,19 @@ import { formatDate, getLunarCalendar, getAge, calculateDaysUntilFutureDate } fr
 import { AlbumPhoto } from '@/types';
 
 export default function Dashboard() {
-  const { ancestors, rituals, reservations, members, reminders } = useAppStore();
+  const { ancestors, rituals, reservations, members, reminders, branches } = useAppStore();
   
   const pendingReservations = reservations.filter(r => r.status === 'pending').length;
+
+  const getBranchStats = (branchId: string) => {
+    const ancestorCount = ancestors.filter(a => a.branchId === branchId).length;
+    const memberCount = members.filter(m => m.branchId === branchId).length;
+    const ritualCount = rituals.filter(r => {
+      const ancestor = ancestors.find(a => a.id === r.ancestorId);
+      return r.branchId === branchId || ancestor?.branchId === branchId;
+    }).length;
+    return { ancestorCount, memberCount, ritualCount };
+  };
   
   const stats = [
     { 
@@ -169,6 +179,60 @@ export default function Dashboard() {
           );
         })}
       </div>
+
+      {branches.length > 0 && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="section-title mb-0 flex items-center gap-2">
+              <TreeDeciduous className="w-5 h-5 text-gold-500" />
+              分支统计
+            </h2>
+            <Link to="/settings" className="text-sm text-brown-500 hover:text-brown-700 flex items-center gap-1">
+              管理分支 <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {branches.map((branch) => {
+              const branchStats = getBranchStats(branch.id);
+              return (
+                <div 
+                  key={branch.id}
+                  className="p-5 rounded-2xl border border-brown-100 bg-gradient-to-br from-cream-50 to-white hover:shadow-soft transition-all"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div 
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-soft"
+                      style={{ backgroundColor: branch.color || '#dc2626' }}
+                    >
+                      {branch.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-brown-800">{branch.name}</h3>
+                      {branch.description && (
+                        <p className="text-xs text-brown-500">{branch.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-brown-800 font-serif">{branchStats.ancestorCount}</p>
+                      <p className="text-xs text-brown-500">先人</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-purple-600 font-serif">{branchStats.memberCount}</p>
+                      <p className="text-xs text-brown-500">成员</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-emerald-600 font-serif">{branchStats.ritualCount}</p>
+                      <p className="text-xs text-brown-500">祭祀</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="card">

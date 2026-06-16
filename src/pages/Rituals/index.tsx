@@ -6,9 +6,10 @@ import { formatDate, getLunarCalendar } from '@/utils/dateUtils';
 
 export default function RitualsList() {
   const location = useLocation();
-  const { rituals, ancestors, globalSearchTerm } = useAppStore();
+  const { rituals, ancestors, globalSearchTerm, branches } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAncestor, setSelectedAncestor] = useState<string | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
 
   useEffect(() => {
     const state = location.state as { searchTerm?: string } | null;
@@ -27,7 +28,11 @@ export default function RitualsList() {
                           ritual.location.includes(searchTerm) ||
                           ritual.notes?.includes(searchTerm);
     const matchesAncestor = selectedAncestor === null || ritual.ancestorId === selectedAncestor;
-    return matchesSearch && matchesAncestor;
+    
+    const ritualBranchId = ritual.branchId || ancestor?.branchId;
+    const matchesBranch = selectedBranch === null || ritualBranchId === selectedBranch;
+    
+    return matchesSearch && matchesAncestor && matchesBranch;
   });
 
   const sortedRituals = [...filteredRituals].sort((a, b) => 
@@ -50,16 +55,18 @@ export default function RitualsList() {
       </div>
 
       <div className="card mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-brown-400" />
-            <input
-              type="text"
-              placeholder="搜索先人、地点、备注..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field pl-10"
-            />
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-brown-400" />
+              <input
+                type="text"
+                placeholder="搜索先人、地点、备注..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="input-field pl-10"
+              />
+            </div>
           </div>
           <div className="flex gap-2 flex-wrap">
             <button
@@ -70,7 +77,7 @@ export default function RitualsList() {
                   : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
               }`}
             >
-              全部
+              全部先人
             </button>
             {ancestors.map(a => (
               <button
@@ -86,6 +93,37 @@ export default function RitualsList() {
               </button>
             ))}
           </div>
+          {branches.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setSelectedBranch(null)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedBranch === null
+                    ? 'bg-brown-600 text-white shadow-soft'
+                    : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
+                }`}
+              >
+                全部分支
+              </button>
+              {branches.map(branch => (
+                <button
+                  key={branch.id}
+                  onClick={() => setSelectedBranch(branch.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    selectedBranch === branch.id
+                      ? 'bg-brown-600 text-white shadow-soft'
+                      : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
+                  }`}
+                >
+                  <span 
+                    className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle"
+                    style={{ backgroundColor: branch.color || '#dc2626' }}
+                  />
+                  {branch.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

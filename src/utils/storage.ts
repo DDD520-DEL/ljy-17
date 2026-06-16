@@ -1,6 +1,7 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch } from '@/types';
 
 const STORAGE_KEYS = {
+  BRANCHES: 'family_branches',
   ANCESTORS: 'family_ancestors',
   RITUALS: 'family_rituals',
   RESERVATIONS: 'family_reservations',
@@ -15,6 +16,65 @@ const defaultSettings: AppSettings = {
 };
 
 export const storage = {
+  getBranches(): FamilyBranch[] {
+    const data = localStorage.getItem(STORAGE_KEYS.BRANCHES);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setBranches(branches: FamilyBranch[]): void {
+    localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(branches));
+  },
+
+  addBranch(branch: Omit<FamilyBranch, 'id' | 'createdAt' | 'updatedAt'>): FamilyBranch {
+    const branches = this.getBranches();
+    const newBranch: FamilyBranch = {
+      ...branch,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    branches.push(newBranch);
+    this.setBranches(branches);
+    return newBranch;
+  },
+
+  updateBranch(id: string, data: Partial<FamilyBranch>): FamilyBranch | null {
+    const branches = this.getBranches();
+    const index = branches.findIndex(b => b.id === id);
+    if (index === -1) return null;
+    branches[index] = {
+      ...branches[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setBranches(branches);
+    return branches[index];
+  },
+
+  deleteBranch(id: string): boolean {
+    const branches = this.getBranches();
+    const filtered = branches.filter(b => b.id !== id);
+    if (filtered.length === branches.length) return false;
+    this.setBranches(filtered);
+    
+    const ancestors = this.getAncestors().map(a => 
+      a.branchId === id ? { ...a, branchId: undefined } : a
+    );
+    this.setAncestors(ancestors);
+    
+    const members = this.getMembers().map(m => 
+      m.branchId === id ? { ...m, branchId: undefined } : m
+    );
+    this.setMembers(members);
+    
+    const rituals = this.getRituals().map(r => 
+      r.branchId === id ? { ...r, branchId: undefined } : r
+    );
+    this.setRituals(rituals);
+    
+    return true;
+  },
+
   getAncestors(): Ancestor[] {
     const data = localStorage.getItem(STORAGE_KEYS.ANCESTORS);
     return data ? JSON.parse(data) : [];
@@ -191,6 +251,7 @@ export const storage = {
 
   exportData(): string {
     const data = {
+      branches: this.getBranches(),
       ancestors: this.getAncestors(),
       rituals: this.getRituals(),
       reservations: this.getReservations(),
@@ -204,6 +265,7 @@ export const storage = {
   importData(jsonStr: string): boolean {
     try {
       const data = JSON.parse(jsonStr);
+      if (data.branches) this.setBranches(data.branches);
       if (data.ancestors) this.setAncestors(data.ancestors);
       if (data.rituals) this.setRituals(data.rituals);
       if (data.reservations) this.setReservations(data.reservations);
@@ -216,6 +278,7 @@ export const storage = {
   },
 
   clearAllData(): void {
+    localStorage.removeItem(STORAGE_KEYS.BRANCHES);
     localStorage.removeItem(STORAGE_KEYS.ANCESTORS);
     localStorage.removeItem(STORAGE_KEYS.RITUALS);
     localStorage.removeItem(STORAGE_KEYS.RESERVATIONS);

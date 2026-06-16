@@ -1,11 +1,20 @@
+import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, groupByYear, getLunarCalendar } from '@/utils/dateUtils';
-import { Calendar, MapPin, Users, Gift, ScrollText } from 'lucide-react';
+import { Calendar, MapPin, Users, Gift, ScrollText, TreeDeciduous } from 'lucide-react';
 
 export default function RitualTimeline() {
-  const { rituals, ancestors } = useAppStore();
+  const { rituals, ancestors, branches } = useAppStore();
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
 
-  const sortedRituals = [...rituals].sort((a, b) => 
+  const filteredRituals = rituals.filter(ritual => {
+    if (selectedBranch === null) return true;
+    const ancestor = ancestors.find(a => a.id === ritual.ancestorId);
+    const ritualBranchId = ritual.branchId || ancestor?.branchId;
+    return ritualBranchId === selectedBranch;
+  });
+
+  const sortedRituals = [...filteredRituals].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
@@ -21,7 +30,45 @@ export default function RitualTimeline() {
         </p>
       </div>
 
-      {rituals.length === 0 ? (
+      {branches.length > 0 && (
+        <div className="card mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <TreeDeciduous className="w-4 h-4 text-brown-500" />
+            <span className="text-sm font-medium text-brown-700">按分支筛选</span>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setSelectedBranch(null)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                selectedBranch === null
+                  ? 'bg-brown-600 text-white shadow-soft'
+                  : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
+              }`}
+            >
+              全部分支
+            </button>
+            {branches.map(branch => (
+              <button
+                key={branch.id}
+                onClick={() => setSelectedBranch(branch.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedBranch === branch.id
+                    ? 'bg-brown-600 text-white shadow-soft'
+                    : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
+                }`}
+              >
+                <span 
+                  className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle"
+                  style={{ backgroundColor: branch.color || '#dc2626' }}
+                />
+                {branch.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {filteredRituals.length === 0 ? (
         <div className="card text-center py-16">
           <div className="w-20 h-20 mx-auto bg-cream-100 rounded-full flex items-center justify-center mb-4">
             <ScrollText className="w-10 h-10 text-brown-400" />

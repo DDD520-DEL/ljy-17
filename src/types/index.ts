@@ -1,3 +1,12 @@
+export interface FamilyBranch {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Ancestor {
   id: string;
   name: string;
@@ -8,6 +17,7 @@ export interface Ancestor {
   photos?: string[];
   biography?: string;
   generation: number;
+  branchId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,6 +41,7 @@ export interface Ritual {
   offerings: string[];
   notes?: string;
   photos?: string[];
+  branchId?: string;
   createdAt: string;
 }
 
@@ -46,6 +57,7 @@ export interface FamilyMember {
   avatar?: string;
   isAlive: boolean;
   gender: 'male' | 'female';
+  branchId?: string;
   createdAt: string;
 }
 
@@ -90,6 +102,7 @@ export interface TreeNode {
   birthDate?: string;
   avatar?: string;
   generation: number;
+  branchId?: string;
   children: TreeNode[];
   spouse?: TreeNode;
 }

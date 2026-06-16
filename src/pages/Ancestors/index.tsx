@@ -6,9 +6,10 @@ import { formatDate, getAge, getLunarCalendar, getGenerationName } from '@/utils
 
 export default function AncestorsList() {
   const location = useLocation();
-  const { ancestors, globalSearchTerm } = useAppStore();
+  const { ancestors, globalSearchTerm, branches } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGeneration, setSelectedGeneration] = useState<number | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
 
   useEffect(() => {
     const state = location.state as { searchTerm?: string } | null;
@@ -26,7 +27,8 @@ export default function AncestorsList() {
     const matchesSearch = ancestor.name.includes(searchTerm) || 
                           ancestor.relationship.includes(searchTerm);
     const matchesGeneration = selectedGeneration === null || ancestor.generation === selectedGeneration;
-    return matchesSearch && matchesGeneration;
+    const matchesBranch = selectedBranch === null || ancestor.branchId === selectedBranch;
+    return matchesSearch && matchesGeneration && matchesBranch;
   });
 
   const sortedAncestors = [...filteredAncestors].sort((a, b) => a.generation - b.generation);
@@ -47,16 +49,18 @@ export default function AncestorsList() {
       </div>
 
       <div className="card mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-brown-400" />
-            <input
-              type="text"
-              placeholder="搜索姓名、关系..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field pl-10"
-            />
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-brown-400" />
+              <input
+                type="text"
+                placeholder="搜索姓名、关系..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="input-field pl-10"
+              />
+            </div>
           </div>
           <div className="flex gap-2 flex-wrap">
             <button
@@ -67,7 +71,7 @@ export default function AncestorsList() {
                   : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
               }`}
             >
-              全部
+              全部辈分
             </button>
             {generations.map(gen => (
               <button
@@ -83,6 +87,37 @@ export default function AncestorsList() {
               </button>
             ))}
           </div>
+          {branches.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setSelectedBranch(null)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedBranch === null
+                    ? 'bg-brown-600 text-white shadow-soft'
+                    : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
+                }`}
+              >
+                全部分支
+              </button>
+              {branches.map(branch => (
+                <button
+                  key={branch.id}
+                  onClick={() => setSelectedBranch(branch.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    selectedBranch === branch.id
+                      ? 'bg-brown-600 text-white shadow-soft'
+                      : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
+                  }`}
+                >
+                  <span 
+                    className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle"
+                    style={{ backgroundColor: branch.color || '#dc2626' }}
+                  />
+                  {branch.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -124,11 +159,22 @@ export default function AncestorsList() {
                     </h3>
                     <ChevronRight className="w-5 h-5 text-brown-300 group-hover:text-gold-500 group-hover:translate-x-1 transition-all opacity-0 group-hover:opacity-100" />
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="text-sm text-brown-500">{ancestor.relationship}</span>
                     <span className="text-xs px-2 py-0.5 bg-cream-100 text-brown-600 rounded-full">
                       {getGenerationName(ancestor.generation)}
                     </span>
+                    {ancestor.branchId && (() => {
+                      const branch = branches.find(b => b.id === ancestor.branchId);
+                      return branch ? (
+                        <span 
+                          className="text-xs px-2 py-0.5 rounded-full text-white"
+                          style={{ backgroundColor: branch.color || '#dc2626' }}
+                        >
+                          {branch.name}
+                        </span>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
               </Link>

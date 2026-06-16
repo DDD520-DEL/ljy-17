@@ -1,10 +1,29 @@
-import { Ancestor, Ritual, FamilyMember, RitualReservation } from '@/types';
+import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch } from '@/types';
 
 const getFutureDate = (daysFromNow: number): string => {
   const date = new Date();
   date.setDate(date.getDate() + daysFromNow);
   return date.toISOString().split('T')[0];
 };
+
+export const mockBranches: FamilyBranch[] = [
+  {
+    id: 'branch-1',
+    name: '长房',
+    description: '长子张大山一脉',
+    color: '#dc2626',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'branch-2',
+    name: '二房',
+    description: '次子张三一脉',
+    color: '#2563eb',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+];
 
 export const mockReservations: RitualReservation[] = [
   {
@@ -85,6 +104,7 @@ export const mockAncestors: Ancestor[] = [
     deathDate: '2020-04-18',
     biography: '退休教师，教书育人四十载，桃李满天下。',
     generation: -1,
+    branchId: 'branch-1',
     photos: [
       'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20gentleman%20teacher%20portrait%20warm%20smile%202010s%20photograph&image_size=square',
       'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20grandfather%20with%20grandchildren%20park%20scene%20warm%20afternoon&image_size=landscape_4_3',
@@ -100,6 +120,7 @@ export const mockAncestors: Ancestor[] = [
     deathDate: '2018-09-10',
     biography: '医务工作者，一生救死扶伤，宅心仁厚。',
     generation: -1,
+    branchId: 'branch-1',
     photos: [
       'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20grandmother%20portrait%20kind%20face%20warm%20lighting%20photograph&image_size=square',
     ],
@@ -118,6 +139,7 @@ export const mockRituals: Ritual[] = [
     participants: ['张三', '李四', '张小明', '张小红'],
     offerings: ['水果', '糕点', '白酒', '香烛', '纸钱'],
     notes: '清明时节，全家老小一同前往祭扫，天气晴朗。',
+    branchId: 'branch-1',
     photos: [
       'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20tomb%20sweeping%20day%20ceremony%20family%20gathering%20cemetery%20incense%20offerings&image_size=landscape_4_3',
       'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Qingming%20festival%20family%20offering%20incense%20at%20grave%20cemetery%20flowers&image_size=landscape_16_9',
@@ -133,6 +155,7 @@ export const mockRituals: Ritual[] = [
     participants: ['张三', '张小明'],
     offerings: ['鲜花', '水果', '糕点', '香烛'],
     notes: '忌日祭拜，恰逢教师节，献上鲜花表达怀念。',
+    branchId: 'branch-1',
     photos: [
       'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20memorial%20ceremony%20fresh%20flowers%20on%20grave%20solemn%20atmosphere&image_size=landscape_4_3',
     ],
@@ -163,6 +186,7 @@ export const mockRituals: Ritual[] = [
     participants: ['张三', '李四', '张小明'],
     offerings: ['年糕', '糖果', '清茶', '香烛'],
     notes: '小年祭拜，在家中举行简单仪式。',
+    branchId: 'branch-1',
     createdAt: '2025-01-23T00:00:00Z',
   },
 ];
@@ -177,6 +201,7 @@ export const mockMembers: FamilyMember[] = [
     gender: 'male',
     isAlive: true,
     phone: '13800138001',
+    branchId: 'branch-1',
     createdAt: '2024-01-01T00:00:00Z',
   },
   {
@@ -188,6 +213,7 @@ export const mockMembers: FamilyMember[] = [
     gender: 'male',
     isAlive: true,
     phone: '13800138002',
+    branchId: 'branch-2',
     createdAt: '2024-01-01T00:00:00Z',
   },
   {
@@ -200,6 +226,7 @@ export const mockMembers: FamilyMember[] = [
     isAlive: true,
     phone: '13800138003',
     spouseId: '2',
+    branchId: 'branch-2',
     createdAt: '2024-01-01T00:00:00Z',
   },
   {
@@ -212,6 +239,7 @@ export const mockMembers: FamilyMember[] = [
     gender: 'male',
     isAlive: true,
     phone: '13800138004',
+    branchId: 'branch-2',
     createdAt: '2024-01-01T00:00:00Z',
   },
   {
@@ -224,6 +252,7 @@ export const mockMembers: FamilyMember[] = [
     gender: 'female',
     isAlive: true,
     phone: '13800138005',
+    branchId: 'branch-2',
     createdAt: '2024-01-01T00:00:00Z',
   },
   {
@@ -235,11 +264,17 @@ export const mockMembers: FamilyMember[] = [
     gender: 'male',
     isAlive: true,
     phone: '13800138006',
+    branchId: 'branch-1',
     createdAt: '2024-01-01T00:00:00Z',
   },
 ];
 
 export const initializeMockData = (): void => {
+  const existingBranches = localStorage.getItem('family_branches');
+  if (!existingBranches || JSON.parse(existingBranches).length === 0) {
+    localStorage.setItem('family_branches', JSON.stringify(mockBranches));
+  }
+  
   const existingAncestors = localStorage.getItem('family_ancestors');
   if (!existingAncestors || JSON.parse(existingAncestors).length === 0) {
     localStorage.setItem('family_ancestors', JSON.stringify(mockAncestors));

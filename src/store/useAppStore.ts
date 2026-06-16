@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { Ancestor, Ritual, FamilyMember, AppSettings, ReminderItem, RitualReservation } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, ReminderItem, RitualReservation, FamilyBranch } from '@/types';
 import { storage } from '@/utils/storage';
 import { getReminders } from '@/utils/dateUtils';
 import { initializeMockData } from '@/utils/mockData';
 
 interface AppState {
+  branches: FamilyBranch[];
   ancestors: Ancestor[];
   rituals: Ritual[];
   reservations: RitualReservation[];
@@ -17,6 +18,10 @@ interface AppState {
   initialize: () => void;
   refreshReminders: () => void;
   setGlobalSearchTerm: (term: string) => void;
+  
+  addBranch: (branch: Omit<FamilyBranch, 'id' | 'createdAt' | 'updatedAt'>) => FamilyBranch;
+  updateBranch: (id: string, data: Partial<FamilyBranch>) => FamilyBranch | null;
+  deleteBranch: (id: string) => boolean;
   
   addAncestor: (ancestor: Omit<Ancestor, 'id' | 'createdAt' | 'updatedAt'>) => Ancestor;
   updateAncestor: (id: string, data: Partial<Ancestor>) => Ancestor | null;
@@ -43,6 +48,7 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
+  branches: [],
   ancestors: [],
   rituals: [],
   reservations: [],
@@ -61,6 +67,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     
     initializeMockData();
     
+    const branches = storage.getBranches();
     const ancestors = storage.getAncestors();
     const rituals = storage.getRituals();
     const reservations = storage.getReservations();
@@ -70,6 +77,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const reminders = getReminders(ancestors, settings.reminderDays, reservations);
     
     set({
+      branches,
       ancestors,
       rituals,
       reservations,
@@ -86,8 +94,36 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ reminders });
   },
   
-  setGlobalSearchTerm: (term: string) => {
+  setGlobalSearchTerm: (term) => {
     set({ globalSearchTerm: term });
+  },
+  
+  addBranch: (branch) => {
+    const newBranch = storage.addBranch(branch);
+    const branches = storage.getBranches();
+    set({ branches });
+    return newBranch;
+  },
+  
+  updateBranch: (id, data) => {
+    const updated = storage.updateBranch(id, data);
+    if (updated) {
+      const branches = storage.getBranches();
+      set({ branches });
+    }
+    return updated;
+  },
+  
+  deleteBranch: (id) => {
+    const success = storage.deleteBranch(id);
+    if (success) {
+      const branches = storage.getBranches();
+      const ancestors = storage.getAncestors();
+      const members = storage.getMembers();
+      const rituals = storage.getRituals();
+      set({ branches, ancestors, members, rituals });
+    }
+    return success;
   },
   
   addAncestor: (ancestor) => {
@@ -247,13 +283,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   importData: (jsonStr) => {
     const success = storage.importData(jsonStr);
     if (success) {
+      const branches = storage.getBranches();
       const ancestors = storage.getAncestors();
       const rituals = storage.getRituals();
       const reservations = storage.getReservations();
       const members = storage.getMembers();
       const settings = storage.getSettings();
       const reminders = getReminders(ancestors, settings.reminderDays, reservations);
-      set({ ancestors, rituals, reservations, members, settings, reminders });
+      set({ branches, ancestors, rituals, reservations, members, settings, reminders });
     }
     return success;
   },
@@ -261,6 +298,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   clearAllData: () => {
     storage.clearAllData();
     set({
+      branches: [],
       ancestors: [],
       rituals: [],
       reservations: [],

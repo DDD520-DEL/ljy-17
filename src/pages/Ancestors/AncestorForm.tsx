@@ -11,7 +11,7 @@ interface AncestorFormProps {
 export default function AncestorForm({ mode }: AncestorFormProps) {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { addAncestor, updateAncestor, deleteAncestor, ancestors } = useAppStore();
+  const { addAncestor, updateAncestor, deleteAncestor, ancestors, branches } = useAppStore();
   
   const [formData, setFormData] = useState<Partial<Ancestor>>({
     name: '',
@@ -21,6 +21,7 @@ export default function AncestorForm({ mode }: AncestorFormProps) {
     biography: '',
     generation: 0,
     photos: [],
+    branchId: '',
   });
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -252,6 +253,24 @@ export default function AncestorForm({ mode }: AncestorFormProps) {
               <option value={0}>父辈</option>
               <option value={1}>我辈</option>
               <option value={2}>子辈</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-brown-700 mb-2">
+              所属分支
+            </label>
+            <select
+              value={formData.branchId || ''}
+              onChange={(e) => handleInputChange('branchId', e.target.value)}
+              className="input-field"
+            >
+              <option value="">未分配</option>
+              {branches.map(branch => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
             </select>
           </div>
         </div>

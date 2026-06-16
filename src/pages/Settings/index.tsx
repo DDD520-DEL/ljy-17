@@ -7,15 +7,51 @@ import {
   Trash2, 
   AlertTriangle,
   CheckCircle,
-  Info
+  Info,
+  GitBranch,
+  Plus,
+  Edit3,
+  X,
+  Palette,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { FamilyBranch } from '@/types';
 
 export default function SettingsPage() {
-  const { settings, updateSettings, exportData, importData, clearAllData } = useAppStore();
+  const { 
+    settings, 
+    updateSettings, 
+    exportData, 
+    importData, 
+    clearAllData,
+    branches,
+    addBranch,
+    updateBranch,
+    deleteBranch,
+  } = useAppStore();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [showBranchForm, setShowBranchForm] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<FamilyBranch | null>(null);
+  const [showDeleteBranchConfirm, setShowDeleteBranchConfirm] = useState<string | null>(null);
+  const [branchFormData, setBranchFormData] = useState<Partial<FamilyBranch>>({
+    name: '',
+    description: '',
+    color: '#dc2626',
+  });
+
+  const colorPresets = [
+    '#dc2626',
+    '#ea580c',
+    '#d97706',
+    '#65a30d',
+    '#0891b2',
+    '#2563eb',
+    '#7c3aed',
+    '#db2777',
+  ];
 
   const handleExport = () => {
     const data = exportData();
@@ -58,6 +94,36 @@ export default function SettingsPage() {
   const handleClearData = () => {
     clearAllData();
     setShowClearConfirm(false);
+  };
+
+  const handleAddBranch = () => {
+    setEditingBranch(null);
+    setBranchFormData({ name: '', description: '', color: '#dc2626' });
+    setShowBranchForm(true);
+  };
+
+  const handleEditBranch = (branch: FamilyBranch) => {
+    setEditingBranch(branch);
+    setBranchFormData(branch);
+    setShowBranchForm(true);
+  };
+
+  const handleSaveBranch = () => {
+    if (!branchFormData.name?.trim()) return;
+    
+    if (editingBranch) {
+      updateBranch(editingBranch.id, branchFormData);
+    } else {
+      addBranch(branchFormData as Omit<FamilyBranch, 'id' | 'createdAt' | 'updatedAt'>);
+    }
+    
+    setShowBranchForm(false);
+    setEditingBranch(null);
+  };
+
+  const handleDeleteBranch = (id: string) => {
+    deleteBranch(id);
+    setShowDeleteBranchConfirm(null);
   };
 
   return (
@@ -123,6 +189,75 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-emerald-100 rounded-xl">
+                <GitBranch className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="font-serif text-lg font-semibold text-brown-800">家族分支管理</h3>
+                <p className="text-sm text-brown-500">管理家族的各个分支（长房、二房等）</p>
+              </div>
+            </div>
+            <button
+              onClick={handleAddBranch}
+              className="btn-primary inline-flex items-center gap-2 text-sm py-2 px-4"
+            >
+              <Plus className="w-4 h-4" />
+              添加分支
+            </button>
+          </div>
+
+          {branches.length === 0 ? (
+            <div className="text-center py-8 text-brown-400">
+              <div className="text-4xl mb-2">🌿</div>
+              <p>暂无分支信息</p>
+              <p className="text-xs mt-1">点击上方按钮添加第一个家族分支</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {branches.map((branch) => (
+                <div
+                  key={branch.id}
+                  className="flex items-center justify-between p-4 bg-cream-50 rounded-xl border border-brown-100 hover:border-brown-200 transition-colors group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-soft"
+                      style={{ backgroundColor: branch.color || '#dc2626' }}
+                    >
+                      {branch.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-brown-800">{branch.name}</h4>
+                      {branch.description && (
+                        <p className="text-sm text-brown-500">{branch.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleEditBranch(branch)}
+                      className="p-2 hover:bg-brown-100 rounded-lg transition-colors"
+                      title="编辑"
+                    >
+                      <Edit3 className="w-4 h-4 text-brown-500" />
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteBranchConfirm(branch.id)}
+                      className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                      title="删除"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="card">
@@ -241,6 +376,122 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {showBranchForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md animate-fade-in">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-serif text-xl font-bold text-brown-800">
+                {editingBranch ? '编辑分支' : '添加分支'}
+              </h3>
+              <button
+                onClick={() => setShowBranchForm(false)}
+                className="p-2 hover:bg-brown-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-brown-500" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-brown-700 mb-2">
+                  分支名称 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={branchFormData.name || ''}
+                  onChange={(e) => setBranchFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="如：长房、二房"
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-brown-700 mb-2">
+                  描述
+                </label>
+                <input
+                  type="text"
+                  value={branchFormData.description || ''}
+                  onChange={(e) => setBranchFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="如：长子一脉"
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-brown-700 mb-3">
+                  <div className="flex items-center gap-2">
+                    <Palette className="w-4 h-4" />
+                    标识颜色
+                  </div>
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {colorPresets.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setBranchFormData(prev => ({ ...prev, color }))}
+                      className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${
+                        branchFormData.color === color ? 'ring-2 ring-offset-2 ring-brown-500 scale-110' : ''
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-6 mt-6 border-t border-brown-100">
+              <button
+                type="button"
+                onClick={() => setShowBranchForm(false)}
+                className="btn-secondary"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveBranch}
+                className="btn-primary"
+                disabled={!branchFormData.name?.trim()}
+              >
+                {editingBranch ? '保存' : '添加'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteBranchConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 animate-fade-in">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-100 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="font-serif text-xl font-bold text-brown-800">确认删除</h3>
+            </div>
+            <p className="text-brown-600 mb-6">
+              确定要删除此分支吗？删除后，相关先人和成员的分支归属将被清除，但数据本身不会被删除。
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteBranchConfirm(null)}
+                className="btn-secondary"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => handleDeleteBranch(showDeleteBranchConfirm)}
+                className="px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showClearConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

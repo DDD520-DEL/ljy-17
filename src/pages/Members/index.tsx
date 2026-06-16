@@ -7,8 +7,9 @@ import { getGenerationName } from '@/utils/dateUtils';
 
 export default function MembersList() {
   const location = useLocation();
-  const { members, addMember, updateMember, deleteMember, globalSearchTerm } = useAppStore();
+  const { members, addMember, updateMember, deleteMember, globalSearchTerm, branches } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
 
   useEffect(() => {
     const state = location.state as { searchTerm?: string } | null;
@@ -33,15 +34,18 @@ export default function MembersList() {
     phone: '',
     parentId: '',
     spouseId: '',
+    branchId: '',
   });
 
   const generations = [...new Set(members.map(m => m.generation))].sort((a, b) => a - b);
 
-  const filteredMembers = members.filter(member => 
-    member.name.includes(searchTerm) || 
-    member.relationship.includes(searchTerm) ||
-    member.phone?.includes(searchTerm)
-  );
+  const filteredMembers = members.filter(member => {
+    const matchesSearch = member.name.includes(searchTerm) || 
+                          member.relationship.includes(searchTerm) ||
+                          member.phone?.includes(searchTerm);
+    const matchesBranch = selectedBranch === null || member.branchId === selectedBranch;
+    return matchesSearch && matchesBranch;
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +72,7 @@ export default function MembersList() {
       phone: '',
       parentId: '',
       spouseId: '',
+      branchId: '',
     });
     setShowForm(false);
     setEditingMember(null);
@@ -104,15 +109,48 @@ export default function MembersList() {
       </div>
 
       <div className="card mb-6">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-brown-400" />
-          <input
-            type="text"
-            placeholder="搜索姓名、关系、电话..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field pl-10"
-          />
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-brown-400" />
+            <input
+              type="text"
+              placeholder="搜索姓名、关系、电话..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field pl-10"
+            />
+          </div>
+          {branches.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setSelectedBranch(null)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedBranch === null
+                    ? 'bg-brown-600 text-white shadow-soft'
+                    : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
+                }`}
+              >
+                全部
+              </button>
+              {branches.map(branch => (
+                <button
+                  key={branch.id}
+                  onClick={() => setSelectedBranch(branch.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    selectedBranch === branch.id
+                      ? 'bg-brown-600 text-white shadow-soft'
+                      : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
+                  }`}
+                >
+                  <span 
+                    className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle"
+                    style={{ backgroundColor: branch.color || '#dc2626' }}
+                  />
+                  {branch.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -253,6 +291,24 @@ export default function MembersList() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-brown-700 mb-2">
+                  所属分支
+                </label>
+                <select
+                  value={formData.branchId || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
+                  className="input-field"
+                >
+                  <option value="">未分配</option>
+                  {branches.map(branch => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -336,11 +392,22 @@ export default function MembersList() {
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="text-sm text-brown-500">{member.relationship}</span>
                     <span className="text-xs px-2 py-0.5 bg-cream-100 text-brown-600 rounded-full">
                       {getGenerationName(member.generation)}
                     </span>
+                    {member.branchId && (() => {
+                      const branch = branches.find(b => b.id === member.branchId);
+                      return branch ? (
+                        <span 
+                          className="text-xs px-2 py-0.5 rounded-full text-white"
+                          style={{ backgroundColor: branch.color || '#dc2626' }}
+                        >
+                          {branch.name}
+                        </span>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
               </div>

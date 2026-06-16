@@ -25,6 +25,7 @@ const buildTree = (members: FamilyMember[], generation: number): TreeNode[] => {
       birthDate: member.birthDate,
       avatar: member.avatar,
       generation: member.generation,
+      branchId: member.branchId,
       children,
       spouse: spouse ? {
         id: spouse.id,
@@ -147,11 +148,16 @@ function TreeNodeComponent({ node, level }: TreeNodeComponentProps) {
 }
 
 export default function FamilyTree() {
-  const { members, ancestors } = useAppStore();
+  const { members, ancestors, branches } = useAppStore();
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   
-  const generations = [...new Set(members.map(m => m.generation))].sort((a, b) => a - b);
+  const filteredMembers = selectedBranch === null
+    ? members
+    : members.filter(m => m.branchId === selectedBranch);
   
-  const roots = buildTree(members, generations[0] || 0);
+  const generations = [...new Set(filteredMembers.map(m => m.generation))].sort((a, b) => a - b);
+  
+  const roots = buildTree(filteredMembers, generations[0] || 0);
 
   return (
     <div className="animate-fade-in">
@@ -225,7 +231,45 @@ export default function FamilyTree() {
         </div>
       </div>
 
-      {members.length === 0 ? (
+      {branches.length > 0 && (
+        <div className="card mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <TreeDeciduous className="w-4 h-4 text-brown-500" />
+            <span className="text-sm font-medium text-brown-700">按分支筛选</span>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setSelectedBranch(null)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                selectedBranch === null
+                  ? 'bg-brown-600 text-white shadow-soft'
+                  : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
+              }`}
+            >
+              全部分支
+            </button>
+            {branches.map(branch => (
+              <button
+                key={branch.id}
+                onClick={() => setSelectedBranch(branch.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedBranch === branch.id
+                    ? 'bg-brown-600 text-white shadow-soft'
+                    : 'bg-cream-100 text-brown-600 hover:bg-cream-200'
+                }`}
+              >
+                <span 
+                  className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle"
+                  style={{ backgroundColor: branch.color || '#dc2626' }}
+                />
+                {branch.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {filteredMembers.length === 0 ? (
         <div className="card text-center py-16">
           <div className="w-20 h-20 mx-auto bg-cream-100 rounded-full flex items-center justify-center mb-4">
             <TreeDeciduous className="w-10 h-10 text-brown-400" />
@@ -246,13 +290,13 @@ export default function FamilyTree() {
                     {getGenerationName(gen)}
                   </h3>
                   <p className="text-sm text-brown-500">
-                    共 {members.filter(m => m.generation === gen).length} 人
+                    共 {filteredMembers.filter(m => m.generation === gen).length} 人
                   </p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {members.filter(m => m.generation === gen).map((member, index) => (
+                {filteredMembers.filter(m => m.generation === gen).map((member, index) => (
                   <div
                     key={member.id}
                     className="flex items-center gap-4 p-4 bg-cream-50 rounded-xl border border-brown-100 hover:border-gold-300 transition-all group"
@@ -279,6 +323,17 @@ export default function FamilyTree() {
                         )}
                       </div>
                       <p className="text-sm text-brown-500 truncate">{member.relationship}</p>
+                      {member.branchId && (() => {
+                        const branch = branches.find(b => b.id === member.branchId);
+                        return branch ? (
+                          <span 
+                            className="inline-block text-xs px-2 py-0.5 rounded-full text-white mt-1"
+                            style={{ backgroundColor: branch.color || '#dc2626' }}
+                          >
+                            {branch.name}
+                          </span>
+                        ) : null;
+                      })()}
                       {member.birthDate && (
                         <p className="text-xs text-brown-400 mt-0.5">
                           {member.isAlive ? '出生' : '生卒'}：{member.birthDate}
