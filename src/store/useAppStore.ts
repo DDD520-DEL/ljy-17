@@ -11,9 +11,11 @@ interface AppState {
   settings: AppSettings;
   reminders: ReminderItem[];
   isInitialized: boolean;
+  globalSearchTerm: string;
   
   initialize: () => void;
   refreshReminders: () => void;
+  setGlobalSearchTerm: (term: string) => void;
   
   addAncestor: (ancestor: Omit<Ancestor, 'id' | 'createdAt' | 'updatedAt'>) => Ancestor;
   updateAncestor: (id: string, data: Partial<Ancestor>) => Ancestor | null;
@@ -45,6 +47,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   reminders: [],
   isInitialized: false,
+  globalSearchTerm: '',
   
   initialize: () => {
     if (get().isInitialized) return;
@@ -72,6 +75,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { ancestors, settings } = get();
     const reminders = getReminders(ancestors, settings.reminderDays);
     set({ reminders });
+  },
+  
+  setGlobalSearchTerm: (term: string) => {
+    set({ globalSearchTerm: term });
   },
   
   addAncestor: (ancestor) => {

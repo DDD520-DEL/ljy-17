@@ -1,13 +1,24 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Plus, Search, Edit3, Calendar, MapPin, Users, Gift, ChevronRight } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getLunarCalendar } from '@/utils/dateUtils';
 
 export default function RitualsList() {
-  const { rituals, ancestors } = useAppStore();
+  const location = useLocation();
+  const { rituals, ancestors, globalSearchTerm } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAncestor, setSelectedAncestor] = useState<string | null>(null);
+
+  useEffect(() => {
+    const state = location.state as { searchTerm?: string } | null;
+    if (state?.searchTerm) {
+      setSearchTerm(state.searchTerm);
+      window.history.replaceState({}, document.title);
+    } else if (globalSearchTerm) {
+      setSearchTerm(globalSearchTerm);
+    }
+  }, [location.state, globalSearchTerm]);
 
   const filteredRituals = rituals.filter(ritual => {
     const ancestor = ancestors.find(a => a.id === ritual.ancestorId);

@@ -1,13 +1,24 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Plus, Search, Edit3, Calendar, User, Heart } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getAge, getLunarCalendar, getGenerationName } from '@/utils/dateUtils';
 
 export default function AncestorsList() {
-  const { ancestors } = useAppStore();
+  const location = useLocation();
+  const { ancestors, globalSearchTerm } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGeneration, setSelectedGeneration] = useState<number | null>(null);
+
+  useEffect(() => {
+    const state = location.state as { searchTerm?: string } | null;
+    if (state?.searchTerm) {
+      setSearchTerm(state.searchTerm);
+      window.history.replaceState({}, document.title);
+    } else if (globalSearchTerm) {
+      setSearchTerm(globalSearchTerm);
+    }
+  }, [location.state, globalSearchTerm]);
 
   const generations = [...new Set(ancestors.map(a => a.generation))].sort((a, b) => a - b);
 

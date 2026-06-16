@@ -1,19 +1,141 @@
-import { Bell, Search, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Bell, Search, Menu, X, User, Calendar, Users } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate } from '@/utils/dateUtils';
+import { Ancestor, Ritual, FamilyMember } from '@/types';
 
 interface HeaderProps {
   onMenuToggle?: () => void;
   isMobileMenuOpen?: boolean;
 }
 
+interface SearchResult {
+  type: 'ancestor' | 'ritual' | 'member';
+  item: Ancestor | Ritual | FamilyMember;
+  title: string;
+  subtitle: string;
+  icon: typeof User;
+}
+
 export default function Header({ onMenuToggle, isMobileMenuOpen }: HeaderProps) {
+  const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
-  const reminders = useAppStore(state => state.reminders);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const searchRef = useRef<HTMLDivElement>(null);
+  
+  const { reminders, ancestors, rituals, members, setGlobalSearchTerm } = useAppStore();
   
   const urgentReminders = reminders.filter(r => r.daysLeft <= 3);
   const hasUrgent = urgentReminders.length > 0;
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSearchResults(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    const term = searchTerm.toLowerCase();
+    const results: SearchResult[] = [];
+
+    ancestors.forEach(a => {
+      if (a.name.toLowerCase().includes(term) || a.relationship.toLowerCase().includes(term)) {
+        results.push({
+          type: 'ancestor',
+          item: a,
+          title: a.name,
+          subtitle: `${a.relationship} · ${formatDate(a.deathDate)}`,
+          icon: User,
+        });
+      }
+    });
+
+    rituals.forEach(r => {
+      if (r.location.toLowerCase().includes(term) || r.ancestorName.toLowerCase().includes(term) ||
+          r.participants.some(p => p.toLowerCase().includes(term)) ||
+          r.offerings.some(o => o.toLowerCase().includes(term))) {
+        results.push({
+          type: 'ritual',
+          item: r,
+          title: `${r.ancestorName} 祭祀`,
+          subtitle: `${formatDate(r.date)} · ${r.location}`,
+          icon: Calendar,
+        });
+      }
+    });
+
+    members.forEach(m => {
+      if (m.name.toLowerCase().includes(term) || m.relationship.toLowerCase().includes(term)) {
+        results.push({
+          type: 'member',
+          item: m,
+          title: m.name,
+          subtitle: `${m.relationship} · ${m.generation}代`,
+          icon: Users,
+        });
+      }
+    });
+
+    setSearchResults(results.slice(0, 10));
+    setShowSearchResults(true);
+  }, [searchTerm, ancestors, rituals, members]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setGlobalSearchTerm(e.target.value);
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchTerm.trim()) {
+      e.preventDefault();
+      handleSearchNavigate();
+    }
+  };
+
+  const handleSearchNavigate = () => {
+    setShowSearchResults(false);
+    const term = searchTerm.trim();
+    setGlobalSearchTerm(term);
+
+    if (searchResults.length > 0) {
+      const firstResult = searchResults[0];
+      navigateToResult(firstResult);
+    } else {
+      navigate('/ancestors', { state: { searchTerm: term } });
+    }
+    setSearchTerm('');
+  };
+
+  const navigateToResult = (result: SearchResult) => {
+    setShowSearchResults(false);
+    setSearchTerm('');
+    setGlobalSearchTerm('');
+
+    switch (result.type) {
+      case 'ancestor':
+        navigate('/ancestors', { state: { searchTerm: result.title } });
+        break;
+      case 'ritual':
+        navigate('/rituals', { state: { searchTerm: result.title } });
+        break;
+      case 'member':
+        navigate('/members', { state: { searchTerm: result.title } });
+        break;
+    }
+  };
 
   return (
     <header className="h-16 bg-white/80 backdrop-blur-md border-b border-brown-200 flex items-center justify-between px-6 sticky top-0 z-40">
@@ -25,13 +147,83 @@ export default function Header({ onMenuToggle, isMobileMenuOpen }: HeaderProps) 
           {isMobileMenuOpen ? <X className="w-5 h-5 text-brown-600" /> : <Menu className="w-5 h-5 text-brown-600" />}
         </button>
         
-        <div className="relative hidden md:block">
+        <div className="relative hidden md:block" ref={searchRef}>
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-brown-400" />
           <input
             type="text"
-            placeholder="搜索先人、活动..."
+            placeholder="搜索先人、活动、家属..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            onKeyPress={handleSearchKeyPress}
+            onFocus={() => searchTerm.trim() && setShowSearchResults(true)}
             className="pl-10 pr-4 py-2 w-64 bg-cream-50 border border-brown-200 rounded-lg text-sm focus:bg-white focus:border-brown-400 focus:outline-none transition-all"
           />
+          
+          {showSearchResults && searchResults.length > 0 && (
+            <div className="absolute left-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-card border border-brown-100 overflow-hidden z-50 animate-fade-in">
+              <div className="p-3 border-b border-brown-100 bg-gradient-to-r from-brown-50 to-cream-50">
+                <p className="text-xs font-medium text-brown-600">搜索结果 ({searchResults.length})</p>
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                {searchResults.map((result, index) => {
+                  const Icon = result.icon;
+                  return (
+                    <button
+                      key={`${result.type}-${result.item.id}-${index}`}
+                      onClick={() => navigateToResult(result)}
+                      className="w-full p-3 flex items-center gap-3 hover:bg-cream-50 transition-colors text-left border-b border-brown-50 last:border-b-0"
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        result.type === 'ancestor' ? 'bg-brown-100 text-brown-600' :
+                        result.type === 'ritual' ? 'bg-gold-100 text-gold-600' :
+                        'bg-green-100 text-green-600'
+                      }`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-brown-800 text-sm truncate">
+                          {result.title}
+                        </p>
+                        <p className="text-xs text-brown-500 truncate">
+                          {result.subtitle}
+                        </p>
+                      </div>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        result.type === 'ancestor' ? 'bg-brown-100 text-brown-600' :
+                        result.type === 'ritual' ? 'bg-gold-100 text-gold-600' :
+                        'bg-green-100 text-green-600'
+                      }`}>
+                        {result.type === 'ancestor' ? '先人' : result.type === 'ritual' ? '祭祀' : '家属'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="p-2 border-t border-brown-100 bg-cream-50 text-center">
+                <button
+                  onClick={handleSearchNavigate}
+                  className="text-xs text-brown-600 hover:text-brown-800 transition-colors"
+                >
+                  按回车键查看全部结果 →
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {showSearchResults && searchTerm.trim() && searchResults.length === 0 && (
+            <div className="absolute left-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-card border border-brown-100 overflow-hidden z-50 animate-fade-in">
+              <div className="p-8 text-center">
+                <p className="text-3xl mb-2">🔍</p>
+                <p className="text-sm text-brown-600 mb-3">未找到相关结果</p>
+                <button
+                  onClick={handleSearchNavigate}
+                  className="text-xs text-brown-500 hover:text-brown-700 transition-colors"
+                >
+                  前往先人管理页面搜索 →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       

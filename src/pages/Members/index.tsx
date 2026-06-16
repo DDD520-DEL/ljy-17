@@ -1,13 +1,24 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Plus, Search, Edit3, Trash2, User, Phone, Heart, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { FamilyMember } from '@/types';
 import { getGenerationName } from '@/utils/dateUtils';
 
 export default function MembersList() {
-  const { members, addMember, updateMember, deleteMember } = useAppStore();
+  const location = useLocation();
+  const { members, addMember, updateMember, deleteMember, globalSearchTerm } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const state = location.state as { searchTerm?: string } | null;
+    if (state?.searchTerm) {
+      setSearchTerm(state.searchTerm);
+      window.history.replaceState({}, document.title);
+    } else if (globalSearchTerm) {
+      setSearchTerm(globalSearchTerm);
+    }
+  }, [location.state, globalSearchTerm]);
   const [showForm, setShowForm] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
