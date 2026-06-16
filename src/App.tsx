@@ -16,6 +16,7 @@ import FamilyTree from "@/pages/FamilyTree";
 import MembersList from "@/pages/Members";
 import SettingsPage from "@/pages/Settings";
 import Album from "@/pages/Album";
+import CalendarPage from "@/pages/Calendar";
 import AuthPage from "@/pages/Auth";
 import { useAppStore } from "@/store/useAppStore";
 
@@ -101,6 +102,8 @@ export default function App() {
           <Route path="members" element={<MembersList />} />
           
           <Route path="album" element={<Album />} />
+          
+          <Route path="calendar" element={<CalendarPage />} />
           
           <Route path="settings" element={<SettingsPage />} />
         </Route>

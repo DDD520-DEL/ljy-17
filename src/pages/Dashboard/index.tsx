@@ -14,13 +14,14 @@ import {
   MapPin,
   Camera,
   ZoomIn,
+  CalendarRange,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { formatDate, getLunarCalendar, getAge, calculateDaysUntilFutureDate } from '@/utils/dateUtils';
+import { formatDate, getLunarCalendar, getAge, calculateDaysUntilFutureDate, getCalendarDays, getEventsForMonth, isToday, isUpcoming } from '@/utils/dateUtils';
 import { AlbumPhoto } from '@/types';
 
 export default function Dashboard() {
-  const { ancestors, rituals, reservations, members, reminders, branches } = useAppStore();
+  const { ancestors, rituals, reservations, members, reminders, branches, settings } = useAppStore();
   
   const pendingReservations = reservations.filter(r => r.status === 'pending').length;
 
@@ -78,6 +79,7 @@ export default function Dashboard() {
     { label: '记录祭祀', icon: CalendarDays, path: '/rituals/new', color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100' },
     { label: '查看族谱', icon: TreeDeciduous, path: '/family-tree', color: 'text-green-600 bg-green-50 hover:bg-green-100' },
     { label: '家属管理', icon: Users, path: '/members', color: 'text-purple-600 bg-purple-50 hover:bg-purple-100' },
+    { label: '纪念日历', icon: CalendarRange, path: '/calendar', color: 'text-amber-600 bg-amber-50 hover:bg-amber-100' },
   ];
 
   const upcomingReminders = reminders.slice(0, 6);
@@ -164,7 +166,7 @@ export default function Dashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
@@ -178,6 +180,77 @@ export default function Dashboard() {
             </Link>
           );
         })}
+      </div>
+
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="section-title mb-0 flex items-center gap-2">
+            <CalendarRange className="w-5 h-5 text-gold-500" />
+            纪念日历
+          </h2>
+          <Link to="/calendar" className="text-sm text-brown-500 hover:text-brown-700 flex items-center gap-1">
+            查看完整日历 <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+        {(() => {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const miniDays = getCalendarDays(year, month);
+          const miniEvents = getEventsForMonth(year, month, ancestors, rituals, reservations);
+          const WEEKDAYS_MINI = ['日', '一', '二', '三', '四', '五', '六'];
+          const dateKey = (d: Date) =>
+            `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          const inMonth = (d: Date) => d.getMonth() === month;
+          return (
+            <div>
+              <p className="text-center font-serif text-lg font-semibold text-brown-800 mb-3">
+                {year}年{month + 1}月
+              </p>
+              <div className="grid grid-cols-7 gap-1">
+                {WEEKDAYS_MINI.map(d => (
+                  <div key={d} className="text-center text-xs font-medium text-brown-500 py-1">{d}</div>
+                ))}
+                {miniDays.map((day, idx) => {
+                  const key = dateKey(day);
+                  const events = miniEvents.get(key) || [];
+                  const today = isToday(day);
+                  const isM = inMonth(day);
+                  const upcoming = isUpcoming(day, settings.reminderDays);
+                  const hasBirth = events.some(e => e.type === 'birth');
+                  const hasDeath = events.some(e => e.type === 'death');
+                  const hasRitual = events.some(e => e.type === 'ritual' || e.type === 'reservation');
+                  return (
+                    <Link
+                      key={idx}
+                      to="/calendar"
+                      className={`
+                        relative flex flex-col items-center justify-center py-1.5 rounded-lg text-sm transition-all
+                        ${!isM ? 'text-brown-300' : today ? 'bg-brown-600 text-white font-bold' : 'text-brown-700 hover:bg-cream-100'}
+                        ${upcoming && isM && !today ? 'ring-1 ring-red-300' : ''}
+                      `}
+                    >
+                      {day.getDate()}
+                      {isM && events.length > 0 && (
+                        <div className="flex gap-0.5 mt-0.5">
+                          {hasBirth && <span className="w-1.5 h-1.5 rounded-full bg-green-500" />}
+                          {hasDeath && <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />}
+                          {hasRitual && <span className="w-1.5 h-1.5 rounded-full bg-gold-500" />}
+                        </div>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-4 mt-3 justify-center">
+                <span className="flex items-center gap-1 text-xs text-brown-500"><span className="w-2 h-2 rounded-full bg-green-500" />诞辰</span>
+                <span className="flex items-center gap-1 text-xs text-brown-500"><span className="w-2 h-2 rounded-full bg-purple-500" />忌日</span>
+                <span className="flex items-center gap-1 text-xs text-brown-500"><span className="w-2 h-2 rounded-full bg-gold-500" />祭祀</span>
+                <span className="flex items-center gap-1 text-xs text-brown-500"><span className="w-2 h-2 rounded-full border border-red-300" />即将到来</span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {branches.length > 0 && (

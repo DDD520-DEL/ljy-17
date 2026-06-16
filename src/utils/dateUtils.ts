@@ -1,4 +1,140 @@
-import { Ancestor, ReminderItem, RitualReservation } from '@/types';
+import { Ancestor, ReminderItem, RitualReservation, Ritual } from '@/types';
+
+export type CalendarEventType = 'birth' | 'death' | 'ritual' | 'reservation';
+
+export interface CalendarEvent {
+  type: CalendarEventType;
+  ancestorId: string;
+  ancestorName: string;
+  date: string;
+  label: string;
+  id: string;
+  ritualId?: string;
+  reservationId?: string;
+  location?: string;
+}
+
+export interface DayEvents {
+  date: string;
+  events: CalendarEvent[];
+}
+
+export const getCalendarDays = (year: number, month: number): Date[] => {
+  const firstDay = new Date(year, month, 1);
+  const startDayOfWeek = firstDay.getDay();
+  const startDate = new Date(year, month, 1 - startDayOfWeek);
+  const days: Date[] = [];
+  for (let i = 0; i < 42; i++) {
+    days.push(new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i));
+  }
+  return days;
+};
+
+export const getEventsForMonth = (
+  year: number,
+  month: number,
+  ancestors: Ancestor[],
+  rituals: Ritual[],
+  reservations: RitualReservation[]
+): Map<string, CalendarEvent[]> => {
+  const eventsMap = new Map<string, CalendarEvent[]>();
+
+  const dateKey = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  const sameMonthDay = (dateStr: string, y: number, m: number) => {
+    const d = new Date(dateStr);
+    return d.getMonth() === m && d.getDate() >= 1 && d.getDate() <= 31;
+  };
+
+  const addEvent = (key: string, event: CalendarEvent) => {
+    const existing = eventsMap.get(key) || [];
+    existing.push(event);
+    eventsMap.set(key, existing);
+  };
+
+  ancestors.forEach(ancestor => {
+    const birthDate = new Date(ancestor.birthDate);
+    if (birthDate.getMonth() === month) {
+      const dayKey = dateKey(new Date(year, month, birthDate.getDate()));
+      addEvent(dayKey, {
+        type: 'birth',
+        ancestorId: ancestor.id,
+        ancestorName: ancestor.name,
+        date: ancestor.birthDate,
+        label: `${ancestor.name} 诞辰`,
+        id: `${ancestor.id}-birth`,
+      });
+    }
+
+    const deathDate = new Date(ancestor.deathDate);
+    if (deathDate.getMonth() === month) {
+      const dayKey = dateKey(new Date(year, month, deathDate.getDate()));
+      addEvent(dayKey, {
+        type: 'death',
+        ancestorId: ancestor.id,
+        ancestorName: ancestor.name,
+        date: ancestor.deathDate,
+        label: `${ancestor.name} 忌日`,
+        id: `${ancestor.id}-death`,
+      });
+    }
+  });
+
+  rituals.forEach(ritual => {
+    if (sameMonthDay(ritual.date, year, month)) {
+      const d = new Date(ritual.date);
+      const dayKey = dateKey(new Date(year, month, d.getDate()));
+      addEvent(dayKey, {
+        type: 'ritual',
+        ancestorId: ritual.ancestorId,
+        ancestorName: ritual.ancestorName || '',
+        date: ritual.date,
+        label: `${ritual.ancestorName || '先人'} 祭祀`,
+        id: `ritual-${ritual.id}`,
+        ritualId: ritual.id,
+        location: ritual.location,
+      });
+    }
+  });
+
+  reservations.forEach(res => {
+    if (res.status !== 'pending') return;
+    if (sameMonthDay(res.date, year, month)) {
+      const d = new Date(res.date);
+      const dayKey = dateKey(new Date(year, month, d.getDate()));
+      addEvent(dayKey, {
+        type: 'reservation',
+        ancestorId: res.ancestorId,
+        ancestorName: res.ancestorName,
+        date: res.date,
+        label: `${res.ancestorName} 预约祭祀`,
+        id: `reservation-${res.id}`,
+        reservationId: res.id,
+        location: res.location,
+      });
+    }
+  });
+
+  return eventsMap;
+};
+
+export const isToday = (date: Date): boolean => {
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+};
+
+export const isUpcoming = (date: Date, withinDays: number = 7): boolean => {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+  const diff = target.getTime() - now.getTime();
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  return days >= 0 && days <= withinDays;
+};
 
 export const formatDate = (dateStr: string, format: 'full' | 'short' | 'year' = 'full'): string => {
   if (!dateStr) return '';
