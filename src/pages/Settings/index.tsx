@@ -30,6 +30,7 @@ import {
   Share2,
   Calendar,
   Image,
+  Package,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { FamilyBranch, ConflictResolution } from '@/types';
@@ -574,6 +575,61 @@ export default function SettingsPage() {
                   <p className="text-sm font-medium text-brown-700">提醒范围</p>
                   <p className="text-xs text-brown-500">
                     系统将在纪念日到来前 {settings.reminderDays} 天开始显示提醒
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-teal-100 rounded-xl">
+              <Package className="w-5 h-5 text-teal-600" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-semibold text-brown-800">库存预警设置</h3>
+              <p className="text-sm text-brown-500">设置供品低库存预警阈值</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-brown-700 mb-3">
+                低库存预警阈值
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  value={settings.lowStockThreshold}
+                  onChange={(e) => updateSettings({ lowStockThreshold: parseInt(e.target.value) })}
+                  className="flex-1 h-2 bg-brown-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+                />
+                <div className="w-20 text-center">
+                  <span className="text-2xl font-bold text-brown-800 font-serif">
+                    {settings.lowStockThreshold}
+                  </span>
+                  <span className="text-sm text-brown-500"> 份</span>
+                </div>
+              </div>
+              <div className="flex justify-between text-xs text-brown-400 mt-1">
+                <span>0份</span>
+                <span>5份</span>
+                <span>10份</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-cream-50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-teal-100 rounded-lg">
+                  <Info className="w-4 h-4 text-teal-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-brown-700">预警规则</p>
+                  <p className="text-xs text-brown-500">
+                    当供品库存低于或等于 {settings.lowStockThreshold} 份时，系统将显示低库存提醒
                   </p>
                 </div>
               </div>

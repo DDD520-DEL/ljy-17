@@ -15,6 +15,7 @@ import {
   ConflictResolution,
   RitualTemplate,
   FamilyEvent,
+  OfferingItem,
 } from '@/types';
 import { storage } from '@/utils/storage';
 import { getReminders } from '@/utils/dateUtils';
@@ -32,6 +33,7 @@ interface AppState {
   reservations: RitualReservation[];
   members: FamilyMember[];
   templates: RitualTemplate[];
+  offerings: OfferingItem[];
   settings: AppSettings;
   reminders: ReminderItem[];
   isInitialized: boolean;
@@ -75,6 +77,11 @@ interface AppState {
   updateTemplate: (id: string, data: Partial<RitualTemplate>) => RitualTemplate | null;
   deleteTemplate: (id: string) => boolean;
 
+  addOffering: (offering: Omit<OfferingItem, 'id' | 'createdAt' | 'updatedAt'>) => OfferingItem;
+  updateOffering: (id: string, data: Partial<OfferingItem>) => OfferingItem | null;
+  deleteOffering: (id: string) => boolean;
+  consumeOfferings: (offeringNames: string[]) => void;
+
   updateSettings: (settings: Partial<AppSettings>) => AppSettings;
 
   exportData: () => string;
@@ -103,6 +110,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   reservations: [],
   members: [],
   templates: [],
+  offerings: [],
   settings: {
     reminderDays: 7,
     theme: 'light',
@@ -111,6 +119,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       includeBirthDeathDates: true,
       includePhotos: true,
     },
+    lowStockThreshold: 2,
   },
   reminders: [],
   isInitialized: false,
@@ -139,6 +148,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const reservations = storage.getReservations();
     const members = storage.getMembers();
     const templates = storage.getTemplates();
+    const offerings = storage.getOfferings();
     const settings = storage.getSettings();
     
     const reminders = getReminders(ancestors, settings.reminderDays, reservations);
@@ -151,6 +161,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       reservations,
       members,
       templates,
+      offerings,
       settings,
       reminders,
       isInitialized: true,
@@ -237,7 +248,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   addRitual: (ritual) => {
     const newRitual = storage.addRitual(ritual);
     const rituals = storage.getRituals();
-    set({ rituals });
+    if (ritual.offerings && ritual.offerings.length > 0) {
+      ritual.offerings.forEach(offering => {
+        storage.consumeOffering(offering, 1);
+      });
+      const offerings = storage.getOfferings();
+      set({ rituals, offerings });
+    } else {
+      set({ rituals });
+    }
     return newRitual;
   },
   
@@ -332,11 +351,18 @@ export const useAppStore = create<AppState>((set, get) => ({
       notes: reservation.notes,
     });
     
+    if (reservation.offerings && reservation.offerings.length > 0) {
+      reservation.offerings.forEach(offering => {
+        storage.consumeOffering(offering, 1);
+      });
+    }
+    
     const reservations = storage.getReservations();
     const rituals = storage.getRituals();
+    const offerings = storage.getOfferings();
     const { ancestors, settings } = get();
     const reminders = getReminders(ancestors, settings.reminderDays, reservations);
-    set({ reservations, rituals, reminders });
+    set({ reservations, rituals, offerings, reminders });
     
     return newRitual;
   },
@@ -391,6 +417,39 @@ export const useAppStore = create<AppState>((set, get) => ({
     return success;
   },
   
+  addOffering: (offering) => {
+    const newOffering = storage.addOffering(offering);
+    const offerings = storage.getOfferings();
+    set({ offerings });
+    return newOffering;
+  },
+  
+  updateOffering: (id, data) => {
+    const updated = storage.updateOffering(id, data);
+    if (updated) {
+      const offerings = storage.getOfferings();
+      set({ offerings });
+    }
+    return updated;
+  },
+  
+  deleteOffering: (id) => {
+    const success = storage.deleteOffering(id);
+    if (success) {
+      const offerings = storage.getOfferings();
+      set({ offerings });
+    }
+    return success;
+  },
+  
+  consumeOfferings: (offeringNames) => {
+    offeringNames.forEach(name => {
+      storage.consumeOffering(name, 1);
+    });
+    const offerings = storage.getOfferings();
+    set({ offerings });
+  },
+  
   updateSettings: (settings) => {
     const updated = storage.updateSettings(settings);
     const { ancestors, reservations } = get();
@@ -413,9 +472,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       const reservations = storage.getReservations();
       const members = storage.getMembers();
       const templates = storage.getTemplates();
+      const offerings = storage.getOfferings();
       const settings = storage.getSettings();
       const reminders = getReminders(ancestors, settings.reminderDays, reservations);
-      set({ branches, ancestors, rituals, events, reservations, members, templates, settings, reminders });
+      set({ branches, ancestors, rituals, events, reservations, members, templates, offerings, settings, reminders });
     }
     return success;
   },
@@ -431,6 +491,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       reservations: [],
       members: [],
       templates: [],
+      offerings: [],
       settings: {
         reminderDays: 7,
         theme: 'light',
@@ -439,6 +500,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           includeBirthDeathDates: true,
           includePhotos: true,
         },
+        lowStockThreshold: 2,
       },
       reminders: [],
       syncState: {
@@ -519,10 +581,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     set(state => ({ syncState: { ...state.syncState, status: 'syncing', lastSyncError: null } }));
 
     try {
-      const { branches, ancestors, rituals, events, reservations, members, templates, settings } = get();
+      const { branches, ancestors, rituals, events, reservations, members, templates, offerings, settings } = get();
 
       const result = await syncOrchestrator.performSync(
-        { branches, ancestors, rituals, events, reservations, members, templates, settings },
+        { branches, ancestors, rituals, events, reservations, members, templates, offerings, settings },
         onConflict
       );
 
@@ -548,6 +610,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         storage.setReservations(result.mergedData.reservations);
         storage.setMembers(result.mergedData.members);
         storage.setTemplates(result.mergedData.templates);
+        storage.setOfferings(result.mergedData.offerings || []);
         storage.updateSettings(result.mergedData.settings);
 
         const reminders = getReminders(result.mergedData.ancestors, result.mergedData.settings.reminderDays, result.mergedData.reservations);
@@ -560,6 +623,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           reservations: result.mergedData.reservations,
           members: result.mergedData.members,
           templates: result.mergedData.templates,
+          offerings: result.mergedData.offerings || [],
           settings: result.mergedData.settings,
           reminders,
         });
@@ -573,6 +637,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         reservations: get().reservations,
         members: get().members,
         templates: get().templates,
+        offerings: get().offerings,
         settings: get().settings,
       });
 
@@ -620,8 +685,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set(state => ({ syncState: { ...state.syncState, status: 'syncing', lastSyncError: null } }));
 
     try {
-      const { branches, ancestors, rituals, events, reservations, members, templates, settings } = get();
-      const result = await syncService.forceUpload({ branches, ancestors, rituals, events, reservations, members, templates, settings });
+      const { branches, ancestors, rituals, events, reservations, members, templates, offerings, settings } = get();
+      const result = await syncService.forceUpload({ branches, ancestors, rituals, events, reservations, members, templates, offerings, settings });
 
       if (!result.success) {
         set(state => ({
@@ -684,6 +749,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         storage.setReservations(result.snapshot.reservations);
         storage.setMembers(result.snapshot.members);
         storage.setTemplates(result.snapshot.templates);
+        storage.setOfferings(result.snapshot.offerings || []);
         storage.updateSettings(result.snapshot.settings);
 
         const reminders = getReminders(result.snapshot.ancestors, result.snapshot.settings.reminderDays, result.snapshot.reservations);
@@ -696,6 +762,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           reservations: result.snapshot.reservations,
           members: result.snapshot.members,
           templates: result.snapshot.templates,
+          offerings: result.snapshot.offerings || [],
           settings: result.snapshot.settings,
           reminders,
         });
@@ -737,10 +804,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const resolvedMap = conflictResolver.resolveAllConflicts(pendingConflicts, 'merge', resolutions);
 
-      const { branches, ancestors, rituals, events, reservations, members, templates, settings } = get();
+      const { branches, ancestors, rituals, events, reservations, members, templates, offerings, settings } = get();
       const { mergeEngine } = await import('@/services/cloudSync');
       const mergeResult = mergeEngine.mergeLocalAndRemote(
-        { branches, ancestors, rituals, events, reservations, members, templates, settings },
+        { branches, ancestors, rituals, events, reservations, members, templates, offerings, settings },
         undefined,
         resolvedMap
       );
@@ -754,6 +821,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       storage.setReservations(mergedData.reservations);
       storage.setMembers(mergedData.members);
       storage.setTemplates(mergedData.templates);
+      storage.setOfferings(mergedData.offerings || []);
       storage.updateSettings(mergedData.settings);
 
       const reminders = getReminders(mergedData.ancestors, mergedData.settings.reminderDays, mergedData.reservations);
@@ -766,6 +834,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         reservations: mergedData.reservations,
         members: mergedData.members,
         templates: mergedData.templates,
+        offerings: mergedData.offerings || [],
         settings: mergedData.settings,
       });
 
@@ -786,6 +855,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         reservations: mergedData.reservations,
         members: mergedData.members,
         templates: mergedData.templates,
+        offerings: mergedData.offerings || [],
         settings: mergedData.settings,
         reminders,
         pendingConflicts: null,

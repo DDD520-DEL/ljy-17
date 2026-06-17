@@ -81,11 +81,26 @@ export interface ShareSettings {
   includePhotos: boolean;
 }
 
+export interface OfferingItem {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  description?: string;
+  lastPurchasedDate?: string;
+  expiryDate?: string;
+  lowStockThreshold?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppSettings {
   reminderDays: number;
   theme: 'light' | 'dark';
   notificationEnabled: boolean;
   shareSettings: ShareSettings;
+  lowStockThreshold: number;
 }
 
 export interface RitualReservation {
@@ -185,7 +200,7 @@ export const FAMILY_EVENT_TYPE_META: Record<FamilyEventType, { label: string; ic
   other: { label: '其他', icon: '📌', color: 'text-gray-600', bgColor: 'bg-gray-50' },
 };
 
-export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events';
+export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings';
 
 export interface ConflictItem {
   entityType: EntityType;
@@ -213,6 +228,7 @@ export interface CloudDataSnapshot {
   reservations: RitualReservation[];
   members: FamilyMember[];
   templates: RitualTemplate[];
+  offerings: OfferingItem[];
   settings: AppSettings;
   snapshotAt: string;
   version: number;

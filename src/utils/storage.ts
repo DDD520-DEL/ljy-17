@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem } from '@/types';
 import { changeTracker } from '@/services/changeTracker';
 
 const STORAGE_KEYS = {
@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   RESERVATIONS: 'family_reservations',
   MEMBERS: 'family_members',
   TEMPLATES: 'ritual_templates',
+  OFFERINGS: 'ritual_offerings',
   SETTINGS: 'family_settings',
 };
 
@@ -20,6 +21,7 @@ const defaultSettings: AppSettings = {
     includeBirthDeathDates: true,
     includePhotos: true,
   },
+  lowStockThreshold: 2,
 };
 
 export const storage = {
@@ -364,6 +366,69 @@ export const storage = {
     return true;
   },
 
+  getOfferings(): OfferingItem[] {
+    const data = localStorage.getItem(STORAGE_KEYS.OFFERINGS);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setOfferings(offerings: OfferingItem[]): void {
+    localStorage.setItem(STORAGE_KEYS.OFFERINGS, JSON.stringify(offerings));
+  },
+
+  addOffering(offering: Omit<OfferingItem, 'id' | 'createdAt' | 'updatedAt'>): OfferingItem {
+    const offerings = this.getOfferings();
+    const newOffering: OfferingItem = {
+      ...offering,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    offerings.push(newOffering);
+    this.setOfferings(offerings);
+    changeTracker.recordChange('offerings', newOffering.id, 'create');
+    return newOffering;
+  },
+
+  updateOffering(id: string, data: Partial<OfferingItem>): OfferingItem | null {
+    const offerings = this.getOfferings();
+    const index = offerings.findIndex(o => o.id === id);
+    if (index === -1) return null;
+    offerings[index] = {
+      ...offerings[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setOfferings(offerings);
+    changeTracker.recordChange('offerings', id, 'update');
+    return offerings[index];
+  },
+
+  deleteOffering(id: string): boolean {
+    const offerings = this.getOfferings();
+    const filtered = offerings.filter(o => o.id !== id);
+    if (filtered.length === offerings.length) return false;
+    this.setOfferings(filtered);
+    changeTracker.recordChange('offerings', id, 'delete');
+    return true;
+  },
+
+  consumeOffering(offeringName: string, quantity: number = 1): boolean {
+    const offerings = this.getOfferings();
+    const offering = offerings.find(o => o.name === offeringName);
+    if (!offering) return false;
+    
+    const newQuantity = Math.max(0, offering.quantity - quantity);
+    const index = offerings.findIndex(o => o.id === offering.id);
+    offerings[index] = {
+      ...offerings[index],
+      quantity: newQuantity,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setOfferings(offerings);
+    changeTracker.recordChange('offerings', offering.id, 'update');
+    return true;
+  },
+
   exportData(): string {
     const data = {
       branches: this.getBranches(),
@@ -373,6 +438,7 @@ export const storage = {
       reservations: this.getReservations(),
       members: this.getMembers(),
       templates: this.getTemplates(),
+      offerings: this.getOfferings(),
       settings: this.getSettings(),
       exportedAt: new Date().toISOString(),
     };
@@ -389,6 +455,7 @@ export const storage = {
       if (data.reservations) this.setReservations(data.reservations);
       if (data.members) this.setMembers(data.members);
       if (data.templates) this.setTemplates(data.templates);
+      if (data.offerings) this.setOfferings(data.offerings);
       if (data.settings) this.updateSettings(data.settings);
       return true;
     } catch {
@@ -404,6 +471,7 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.RESERVATIONS);
     localStorage.removeItem(STORAGE_KEYS.MEMBERS);
     localStorage.removeItem(STORAGE_KEYS.TEMPLATES);
+    localStorage.removeItem(STORAGE_KEYS.OFFERINGS);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
   },
 };

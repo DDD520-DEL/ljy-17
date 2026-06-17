@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch, FamilyEvent } from '@/types';
+import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch, FamilyEvent, OfferingItem } from '@/types';
 
 const getFutureDate = (daysFromNow: number): string => {
   const date = new Date();
@@ -348,6 +348,119 @@ export const mockMembers: FamilyMember[] = [
   },
 ];
 
+export const mockOfferings: OfferingItem[] = [
+  {
+    id: 'offering-1',
+    name: '水果',
+    category: '食品',
+    quantity: 5,
+    unit: '份',
+    description: '新鲜水果拼盘',
+    lowStockThreshold: 2,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'offering-2',
+    name: '糕点',
+    category: '食品',
+    quantity: 3,
+    unit: '份',
+    description: '传统糕点',
+    lowStockThreshold: 2,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'offering-3',
+    name: '白酒',
+    category: '酒水',
+    quantity: 2,
+    unit: '瓶',
+    description: '白酒一瓶',
+    lowStockThreshold: 1,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'offering-4',
+    name: '香烛',
+    category: '祭祀用品',
+    quantity: 10,
+    unit: '包',
+    description: '香和蜡烛',
+    lowStockThreshold: 3,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'offering-5',
+    name: '纸钱',
+    category: '祭祀用品',
+    quantity: 1,
+    unit: '袋',
+    description: '冥币纸钱',
+    lowStockThreshold: 2,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'offering-6',
+    name: '三牲',
+    category: '食品',
+    quantity: 0,
+    unit: '套',
+    description: '猪肉、鸡肉、鱼肉',
+    lowStockThreshold: 1,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'offering-7',
+    name: '清茶',
+    category: '酒水',
+    quantity: 4,
+    unit: '杯',
+    description: '清茶三杯',
+    lowStockThreshold: 2,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'offering-8',
+    name: '鲜花',
+    category: '其他',
+    quantity: 2,
+    unit: '束',
+    description: '鲜花一束',
+    lowStockThreshold: 1,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'offering-9',
+    name: '年糕',
+    category: '食品',
+    quantity: 1,
+    unit: '份',
+    description: '年糕',
+    lowStockThreshold: 2,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'offering-10',
+    name: '糖果',
+    category: '食品',
+    quantity: 3,
+    unit: '袋',
+    description: '糖果',
+    lowStockThreshold: 2,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+];
+
 export const initializeMockData = (): void => {
   const existingBranches = localStorage.getItem('family_branches');
   if (!existingBranches || JSON.parse(existingBranches).length === 0) {
@@ -377,5 +490,10 @@ export const initializeMockData = (): void => {
   const existingMembers = localStorage.getItem('family_members');
   if (!existingMembers || JSON.parse(existingMembers).length === 0) {
     localStorage.setItem('family_members', JSON.stringify(mockMembers));
+  }
+  
+  const existingOfferings = localStorage.getItem('ritual_offerings');
+  if (!existingOfferings || JSON.parse(existingOfferings).length === 0) {
+    localStorage.setItem('ritual_offerings', JSON.stringify(mockOfferings));
   }
 };

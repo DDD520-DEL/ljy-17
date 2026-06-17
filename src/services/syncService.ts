@@ -9,6 +9,7 @@ import {
   AppSettings,
   RitualTemplate,
   FamilyEvent,
+  OfferingItem,
 } from '@/types';
 import { authService } from './authService';
 
@@ -53,6 +54,7 @@ export const syncService = {
     reservations: RitualReservation[];
     members: FamilyMember[];
     templates: RitualTemplate[];
+    offerings: OfferingItem[];
     settings: AppSettings;
   }): Promise<{ success: boolean; snapshot?: CloudDataSnapshot; error?: string }> {
     await delay(700);
@@ -72,6 +74,7 @@ export const syncService = {
         reservations: data.reservations,
         members: data.members,
         templates: data.templates,
+        offerings: data.offerings,
         settings: data.settings,
         snapshotAt: new Date().toISOString(),
         version: getNextVersion(auth.userId),
@@ -108,6 +111,7 @@ export const syncService = {
     reservations: RitualReservation[];
     members: FamilyMember[];
     templates: RitualTemplate[];
+    offerings: OfferingItem[];
     settings: AppSettings;
   }): Promise<SyncResult> {
     await delay(1000);
@@ -130,6 +134,7 @@ export const syncService = {
           reservations: data.reservations,
           members: data.members,
           templates: data.templates,
+          offerings: data.offerings,
           settings: data.settings,
           snapshotAt: new Date().toISOString(),
           version: getNextVersion(auth.userId),
@@ -138,7 +143,7 @@ export const syncService = {
         return {
           success: true,
           syncedAt: newSnapshot.snapshotAt,
-          changesApplied: { local: 0, remote: data.branches.length + data.ancestors.length + data.rituals.length + data.events.length + data.reservations.length + data.members.length + data.templates.length },
+          changesApplied: { local: 0, remote: data.branches.length + data.ancestors.length + data.rituals.length + data.events.length + data.reservations.length + data.members.length + data.templates.length + data.offerings.length },
         };
       }
 
@@ -160,6 +165,7 @@ export const syncService = {
     reservations: RitualReservation[];
     members: FamilyMember[];
     templates: RitualTemplate[];
+    offerings: OfferingItem[];
     settings: AppSettings;
   }): Promise<{ success: boolean; snapshot?: CloudDataSnapshot; error?: string }> {
     return this.uploadSnapshot(data);

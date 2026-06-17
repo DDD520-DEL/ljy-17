@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, Plus, X, ImagePlus, FileText, Check } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus, X, ImagePlus, FileText, Check, AlertTriangle, Package } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { Ritual, RitualTemplate } from '@/types';
+import { Ritual, RitualTemplate, OfferingItem } from '@/types';
 
 interface RitualFormProps {
   mode: 'create' | 'edit';
@@ -15,9 +15,11 @@ export default function RitualForm({ mode }: RitualFormProps) {
   const preselectedAncestorId = searchParams.get('ancestorId');
   const templateId = searchParams.get('templateId');
   
-  const { addRitual, updateRitual, deleteRitual, rituals, ancestors, branches, templates } = useAppStore();
+  const { addRitual, updateRitual, deleteRitual, rituals, ancestors, branches, templates, offerings, settings } = useAppStore();
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null);
+  const [showStockDeductionInfo, setShowStockDeductionInfo] = useState(false);
+  const [stockDeductionItems, setStockDeductionItems] = useState<{ name: string; before: number; after: number; unit: string }[]>([]);
   
   const [formData, setFormData] = useState<Partial<Ritual>>({
     ancestorId: preselectedAncestorId || '',
@@ -100,20 +102,6 @@ export default function RitualForm({ mode }: RitualFormProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validate()) return;
-    
-    if (mode === 'create') {
-      addRitual(formData as Omit<Ritual, 'id' | 'createdAt'>);
-    } else if (mode === 'edit' && id) {
-      updateRitual(id, formData);
-    }
-    
-    navigate('/rituals');
-  };
-
   const handleDelete = () => {
     if (id && deleteRitual(id)) {
       navigate('/rituals');
@@ -152,6 +140,57 @@ export default function RitualForm({ mode }: RitualFormProps) {
       ...prev,
       offerings: prev.offerings?.filter(o => o !== item) || []
     }));
+  };
+
+  const getOfferingStockInfo = (offeringName: string): { item?: OfferingItem; isLow: boolean; isOutOfStock: boolean } => {
+    const item = offerings.find(o => o.name === offeringName);
+    if (!item) return { isLow: false, isOutOfStock: false };
+    
+    const threshold = item.lowStockThreshold ?? settings.lowStockThreshold;
+    return {
+      item,
+      isLow: item.quantity <= threshold,
+      isOutOfStock: item.quantity === 0,
+    };
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validate()) return;
+    
+    if (mode === 'create' && formData.offerings && formData.offerings.length > 0) {
+      const deductions = formData.offerings.map(offeringName => {
+        const info = getOfferingStockInfo(offeringName);
+        if (info.item) {
+          return {
+            name: offeringName,
+            before: info.item.quantity,
+            after: Math.max(0, info.item.quantity - 1),
+            unit: info.item.unit,
+          };
+        }
+        return null;
+      }).filter(Boolean) as { name: string; before: number; after: number; unit: string }[];
+      
+      if (deductions.length > 0) {
+        setStockDeductionItems(deductions);
+        setShowStockDeductionInfo(true);
+        return;
+      }
+    }
+    
+    submitRitual();
+  };
+
+  const submitRitual = () => {
+    if (mode === 'create') {
+      addRitual(formData as Omit<Ritual, 'id' | 'createdAt'>);
+    } else if (mode === 'edit' && id) {
+      updateRitual(id, formData);
+    }
+    
+    navigate('/rituals');
   };
 
   return (
@@ -403,27 +442,99 @@ export default function RitualForm({ mode }: RitualFormProps) {
               <Plus className="w-4 h-4" />
             </button>
           </div>
+          
+          {offerings.length > 0 && (
+            <div className="mb-3 p-3 bg-cream-50 rounded-lg border border-brown-100">
+              <p className="text-xs text-brown-500 mb-2 flex items-center gap-1">
+                <Package className="w-3.5 h-3.5" />
+                快速选择库存供品：
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {offerings.map((offering) => {
+                  const isSelected = formData.offerings?.includes(offering.name);
+                  const stockInfo = getOfferingStockInfo(offering.name);
+                  return (
+                    <button
+                      key={offering.id}
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          removeOffering(offering.name);
+                        } else {
+                          if (!formData.offerings?.includes(offering.name)) {
+                            setFormData(prev => ({
+                              ...prev,
+                              offerings: [...(prev.offerings || []), offering.name]
+                            }));
+                          }
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${
+                        isSelected
+                          ? 'bg-gold-500 text-white'
+                          : stockInfo.isOutOfStock
+                          ? 'bg-red-50 text-red-600 border border-red-200 opacity-60'
+                          : stockInfo.isLow
+                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                          : 'bg-white text-brown-700 border border-brown-200 hover:border-brown-400'
+                      }`}
+                    >
+                      {offering.name}
+                      <span className={`${
+                        isSelected ? 'text-white/80' : stockInfo.isOutOfStock ? 'text-red-400' : stockInfo.isLow ? 'text-amber-500' : 'text-brown-400'
+                      }`}>
+                        ({offering.quantity}{offering.unit})
+                      </span>
+                      {stockInfo.isOutOfStock && <AlertTriangle className="w-3 h-3" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
           <div className="flex flex-wrap gap-2">
             {formData.offerings?.length === 0 ? (
               <span className="text-sm text-brown-400">暂无供品记录</span>
             ) : (
-              formData.offerings?.map((o, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-gold-100 text-gold-700 rounded-full text-sm"
-                >
-                  {o}
-                  <button
-                    type="button"
-                    onClick={() => removeOffering(o)}
-                    className="hover:text-red-500 transition-colors"
+              formData.offerings?.map((o, i) => {
+                const stockInfo = getOfferingStockInfo(o);
+                let badgeClass = 'bg-gold-100 text-gold-700';
+                if (stockInfo.isOutOfStock) badgeClass = 'bg-red-100 text-red-700';
+                else if (stockInfo.isLow) badgeClass = 'bg-amber-100 text-amber-700';
+                
+                return (
+                  <span
+                    key={i}
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 ${badgeClass} rounded-full text-sm`}
                   >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </span>
-              ))
+                    {o}
+                    {stockInfo.item && (
+                      <span className="text-xs opacity-75">
+                        ({stockInfo.item.quantity}{stockInfo.item.unit})
+                      </span>
+                    )}
+                    {stockInfo.isOutOfStock && <AlertTriangle className="w-3.5 h-3.5" />}
+                    {stockInfo.isLow && !stockInfo.isOutOfStock && <AlertTriangle className="w-3.5 h-3.5" />}
+                    <button
+                      type="button"
+                      onClick={() => removeOffering(o)}
+                      className="hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                );
+              })
             )}
           </div>
+          
+          {mode === 'create' && formData.offerings && formData.offerings.length > 0 && (
+            <p className="text-xs text-brown-500 mt-3 flex items-center gap-1">
+              <Package className="w-3.5 h-3.5" />
+              保存祭祀记录后，选中的供品将自动从库存中扣减
+            </p>
+          )}
         </div>
 
         <div>
@@ -550,6 +661,59 @@ export default function RitualForm({ mode }: RitualFormProps) {
                 className="px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
               >
                 确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showStockDeductionInfo && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md mx-4 animate-fade-in w-full">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-gold-100 rounded-full">
+                <Package className="w-6 h-6 text-gold-600" />
+              </div>
+              <h3 className="font-serif text-xl font-bold text-brown-800">确认扣减库存</h3>
+            </div>
+            <p className="text-brown-600 mb-4">
+              保存祭祀记录后，以下供品将从库存中扣减1份：
+            </p>
+            <div className="space-y-2 mb-6 max-h-60 overflow-y-auto">
+              {stockDeductionItems.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-cream-50 rounded-lg">
+                  <span className="font-medium text-brown-800">{item.name}</span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-brown-500">{item.before}{item.unit}</span>
+                    <span className="text-brown-400">→</span>
+                    <span className={`font-medium ${item.after === 0 ? 'text-red-600' : item.after <= 2 ? 'text-amber-600' : 'text-green-600'}`}>
+                      {item.after}{item.unit}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {stockDeductionItems.some(item => item.after === 0) && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-6 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-700">
+                  部分供品扣减后库存将为0，请记得及时采购补充。
+                </p>
+              </div>
+            )}
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowStockDeductionInfo(false)}
+                className="btn-secondary"
+              >
+                取消
+              </button>
+              <button
+                onClick={submitRitual}
+                className="btn-primary flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                确认保存
               </button>
             </div>
           </div>

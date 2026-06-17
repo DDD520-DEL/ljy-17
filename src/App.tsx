@@ -20,6 +20,7 @@ import CalendarPage from "@/pages/Calendar";
 import AuthPage from "@/pages/Auth";
 import FamilyEventsList from "@/pages/FamilyEvents";
 import FamilyEventForm from "@/pages/FamilyEvents/FamilyEventForm";
+import OfferingsPage from "@/pages/Offerings";
 import { useAppStore } from "@/store/useAppStore";
 
 function AppInitializer() {
@@ -106,6 +107,8 @@ export default function App() {
           <Route path="family-tree" element={<FamilyTree />} />
           
           <Route path="members" element={<MembersList />} />
+          
+          <Route path="offerings" element={<OfferingsPage />} />
           
           <Route path="album" element={<Album />} />
           

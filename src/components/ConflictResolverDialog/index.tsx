@@ -28,6 +28,7 @@ const ENTITY_NAMES: Record<EntityType, string> = {
   members: '家族成员',
   templates: '祭祀模板',
   settings: '系统设置',
+  offerings: '供品库存',
 };
 
 export default function ConflictResolverDialog({

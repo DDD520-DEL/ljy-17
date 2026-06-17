@@ -13,6 +13,7 @@ import {
   FileText,
   CalendarRange,
   Sparkles,
+  Package,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -22,6 +23,7 @@ const navItems = [
   { path: '/reservations', icon: CalendarClock, label: '祭祀预约' },
   { path: '/rituals', icon: CalendarDays, label: '祭祀记录' },
   { path: '/ritual-templates', icon: FileText, label: '祭祀模板' },
+  { path: '/offerings', icon: Package, label: '供品库存' },
   { path: '/family-events', icon: Sparkles, label: '家族大事记' },
   { path: '/album', icon: Camera, label: '家族相册' },
   { path: '/timeline', icon: ScrollText, label: '祭祀年表' },
@@ -33,9 +35,13 @@ const navItems = [
 
 export default function Sidebar() {
   const location = useLocation();
-  const { reminders, reservations } = useAppStore();
+  const { reminders, reservations, offerings, settings } = useAppStore();
   const urgentCount = reminders.filter(r => r.daysLeft <= 3).length;
   const pendingReservationsCount = reservations.filter(r => r.status === 'pending').length;
+  const lowStockCount = offerings.filter(o => {
+    const threshold = o.lowStockThreshold ?? settings.lowStockThreshold;
+    return o.quantity <= threshold;
+  }).length;
 
   return (
     <aside className="w-64 min-h-screen bg-gradient-to-b from-brown-50 to-cream-100 border-r border-brown-200 flex flex-col">
@@ -71,6 +77,11 @@ export default function Sidebar() {
                   {urgentCount}
                 </span>
               )}
+              {item.path === '/offerings' && lowStockCount > 0 && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                  {lowStockCount}
+                </span>
+              )}
             </NavLink>
           );
         })}
@@ -84,11 +95,23 @@ export default function Sidebar() {
             {pendingReservationsCount > 0 && ` 另有 ${pendingReservationsCount} 个预约待进行，`}
             请提前做好祭扫准备。
           </p>
-          {pendingReservationsCount > 0 && (
-            <Link to="/reservations" className="text-xs text-blue-600 hover:text-blue-700 underline">
-              查看预约 →
-            </Link>
+          {lowStockCount > 0 && (
+            <p className="text-xs text-amber-600 mb-2">
+              ⚠️ 有 {lowStockCount} 种供品库存不足，请及时采购。
+            </p>
           )}
+          <div className="flex gap-2 flex-wrap">
+            {pendingReservationsCount > 0 && (
+              <Link to="/reservations" className="text-xs text-blue-600 hover:text-blue-700 underline">
+                查看预约 →
+              </Link>
+            )}
+            {lowStockCount > 0 && (
+              <Link to="/offerings" className="text-xs text-amber-600 hover:text-amber-700 underline">
+                查看库存 →
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </aside>

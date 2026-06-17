@@ -16,6 +16,8 @@ import {
   ZoomIn,
   CalendarRange,
   Sparkles,
+  Package,
+  AlertTriangle,
 } from 'lucide-react';
 import { FAMILY_EVENT_TYPE_META } from '@/types';
 import { useAppStore } from '@/store/useAppStore';
@@ -23,9 +25,14 @@ import { formatDate, getLunarCalendar, getAge, calculateDaysUntilFutureDate, get
 import { AlbumPhoto } from '@/types';
 
 export default function Dashboard() {
-  const { ancestors, rituals, events, reservations, members, reminders, branches, settings } = useAppStore();
+  const { ancestors, rituals, events, reservations, members, reminders, branches, settings, offerings } = useAppStore();
   
   const pendingReservations = reservations.filter(r => r.status === 'pending').length;
+  
+  const lowStockOfferings = offerings.filter(offering => {
+    const threshold = offering.lowStockThreshold ?? settings.lowStockThreshold;
+    return offering.quantity <= threshold;
+  });
 
   const getBranchStats = (branchId: string) => {
     const ancestorCount = ancestors.filter(a => a.branchId === branchId).length;
@@ -74,11 +81,12 @@ export default function Dashboard() {
       bg: 'bg-pink-50'
     },
     { 
-      label: '家族成员', 
-      value: members.length, 
-      icon: Users, 
-      color: 'from-purple-400 to-pink-500',
-      bg: 'bg-purple-50'
+      label: '供品种类', 
+      value: offerings.length, 
+      icon: Package, 
+      color: 'from-teal-400 to-cyan-500',
+      bg: 'bg-teal-50',
+      badge: lowStockOfferings.length > 0 ? { value: lowStockOfferings.length, color: 'bg-red-500' } : undefined,
     },
   ];
 
@@ -86,6 +94,7 @@ export default function Dashboard() {
     { label: '添加先人', icon: Flame, path: '/ancestors/new', color: 'text-orange-600 bg-orange-50 hover:bg-orange-100' },
     { label: '祭祀预约', icon: CalendarClock, path: '/reservations/new', color: 'text-blue-600 bg-blue-50 hover:bg-blue-100' },
     { label: '记录祭祀', icon: CalendarDays, path: '/rituals/new', color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100' },
+    { label: '供品库存', icon: Package, path: '/offerings', color: 'text-teal-600 bg-teal-50 hover:bg-teal-100' },
     { label: '家族大事', icon: Sparkles, path: '/family-events/new', color: 'text-pink-600 bg-pink-50 hover:bg-pink-100' },
     { label: '查看族谱', icon: TreeDeciduous, path: '/family-tree', color: 'text-green-600 bg-green-50 hover:bg-green-100' },
     { label: '家属管理', icon: Users, path: '/members', color: 'text-purple-600 bg-purple-50 hover:bg-purple-100' },
@@ -161,24 +170,30 @@ export default function Dashboard() {
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div 
+            <Link
               key={stat.label} 
-              className="stat-card"
+              to={stat.label === '供品种类' ? '/offerings' : '#'}
+              className={`stat-card ${stat.label === '供品种类' ? 'cursor-pointer hover:shadow-soft transition-shadow' : ''}`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="flex flex-col items-center text-center">
-                <div className={`p-3 rounded-xl ${stat.bg} mb-3`}>
+              <div className="flex flex-col items-center text-center relative">
+                <div className={`p-3 rounded-xl ${stat.bg} mb-3 relative`}>
                   <Icon className={`w-7 h-7 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`} />
+                  {stat.badge && (
+                    <span className={`absolute -top-1 -right-1 w-5 h-5 ${stat.badge.color} text-white text-xs font-bold rounded-full flex items-center justify-center`}>
+                      {stat.badge.value}
+                    </span>
+                  )}
                 </div>
                 <p className="text-3xl font-bold text-brown-800 font-serif mb-1">{stat.value}</p>
                 <p className="text-brown-500 text-xs">{stat.label}</p>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
@@ -193,6 +208,58 @@ export default function Dashboard() {
           );
         })}
       </div>
+      
+      {lowStockOfferings.length > 0 && (
+        <div className="p-5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-amber-100 rounded-xl flex-shrink-0">
+              <AlertTriangle className="w-6 h-6 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-amber-800">供品库存预警</h3>
+                  <p className="text-sm text-amber-700 mt-0.5">
+                    有 {lowStockOfferings.length} 种供品库存不足，请及时采购补充
+                  </p>
+                </div>
+                <Link 
+                  to="/offerings" 
+                  className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors flex-shrink-0"
+                >
+                  查看库存
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {lowStockOfferings.map((offering) => (
+                  <div 
+                    key={offering.id}
+                    className="p-3 bg-white rounded-xl border border-amber-100 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium text-brown-800 text-sm truncate">{offering.name}</span>
+                      {offering.quantity === 0 && (
+                        <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-600 rounded">缺货</span>
+                      )}
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className={`text-xl font-bold font-serif ${
+                        offering.quantity === 0 ? 'text-red-600' : 'text-amber-600'
+                      }`}>
+                        {offering.quantity}
+                      </span>
+                      <span className="text-xs text-brown-500">{offering.unit}</span>
+                      <span className="text-xs text-brown-400 ml-auto">
+                        预警: {offering.lowStockThreshold ?? settings.lowStockThreshold}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <div className="flex items-center justify-between mb-4">
