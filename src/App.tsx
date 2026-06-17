@@ -30,6 +30,7 @@ import ExpensesList from "@/pages/Expenses";
 import ExpenseForm from "@/pages/Expenses/ExpenseForm";
 import OfferingWikiPage from "@/pages/OfferingWiki";
 import SolarTermsGuide from "@/pages/SolarTerms";
+import RelationshipGraph from "@/pages/RelationshipGraph";
 import { useAppStore } from "@/store/useAppStore";
 
 function AppInitializer() {
@@ -117,9 +118,10 @@ export default function App() {
           
           <Route path="timeline" element={<RitualTimeline />} />
           
-          <Route path="family-tree" element={<FamilyTree />} />
+          <Route path="/family-tree" element={<FamilyTree />} />
+          <Route path="/relationship-graph" element={<RelationshipGraph />} />
           
-          <Route path="members" element={<MembersList />} />
+          <Route path="/members" element={<MembersList />} />
           
           <Route path="offerings" element={<OfferingsPage />} />
           <Route path="offering-wiki" element={<OfferingWikiPage />} />

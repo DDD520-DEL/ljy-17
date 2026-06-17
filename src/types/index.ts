@@ -405,3 +405,24 @@ export const SOLAR_TERMS_ORDER = [
   '立秋', '处暑', '白露', '秋分', '寒露', '霜降',
   '立冬', '小雪', '大雪', '冬至', '小寒', '大寒',
 ] as const;
+
+export type GraphNodeType = 'ancestor' | 'member';
+export type GraphEdgeType = 'parent' | 'spouse' | 'sibling';
+
+export interface GraphNodeData {
+  label: string;
+  type: GraphNodeType;
+  gender: 'male' | 'female';
+  avatar?: string;
+  isAlive: boolean;
+  generation: number;
+  branchId?: string;
+  branchColor?: string;
+  detailUrl: string;
+  relationship?: string;
+}
+
+export interface GraphEdgeData {
+  type: GraphEdgeType;
+  label?: string;
+}

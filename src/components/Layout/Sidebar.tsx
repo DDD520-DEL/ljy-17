@@ -20,6 +20,7 @@ import {
   Wallet,
   Library,
   Sun,
+  Network,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -41,6 +42,7 @@ const navItems = [
   { path: '/timeline', icon: ScrollText, label: '祭祀年表' },
   { path: '/calendar', icon: CalendarRange, label: '纪念日历' },
   { path: '/family-tree', icon: TreeDeciduous, label: '族谱展示' },
+  { path: '/relationship-graph', icon: Network, label: '关系图谱' },
   { path: '/members', icon: Users, label: '家属管理' },
   { path: '/settings', icon: Settings, label: '系统设置' },
 ];
