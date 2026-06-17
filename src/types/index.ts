@@ -211,7 +211,18 @@ export interface MemorialLocation {
   updatedAt: string;
 }
 
-export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings' | 'locations';
+export interface FamilyRule {
+  id: string;
+  title: string;
+  content: string;
+  sourceAncestor?: string;
+  sortOrder: number;
+  branchId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings' | 'locations' | 'rules';
 
 export interface ConflictItem {
   entityType: EntityType;
@@ -241,6 +252,7 @@ export interface CloudDataSnapshot {
   templates: RitualTemplate[];
   offerings: OfferingItem[];
   locations: MemorialLocation[];
+  rules: FamilyRule[];
   settings: AppSettings;
   snapshotAt: string;
   version: number;

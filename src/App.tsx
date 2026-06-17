@@ -22,6 +22,8 @@ import FamilyEventsList from "@/pages/FamilyEvents";
 import FamilyEventForm from "@/pages/FamilyEvents/FamilyEventForm";
 import OfferingsPage from "@/pages/Offerings";
 import LocationsPage from "@/pages/Locations";
+import FamilyRulesList from "@/pages/FamilyRules";
+import FamilyRuleForm from "@/pages/FamilyRules/FamilyRuleForm";
 import { useAppStore } from "@/store/useAppStore";
 
 function AppInitializer() {
@@ -111,6 +113,10 @@ export default function App() {
           
           <Route path="offerings" element={<OfferingsPage />} />
           <Route path="locations" element={<LocationsPage />} />
+          
+          <Route path="family-rules" element={<FamilyRulesList />} />
+          <Route path="family-rules/new" element={<FamilyRuleForm mode="create" />} />
+          <Route path="family-rules/:id/edit" element={<FamilyRuleForm mode="edit" />} />
           
           <Route path="album" element={<Album />} />
           

@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation, FamilyRule } from '@/types';
 import { changeTracker } from '@/services/changeTracker';
 
 const STORAGE_KEYS = {
@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   TEMPLATES: 'ritual_templates',
   OFFERINGS: 'ritual_offerings',
   LOCATIONS: 'memorial_locations',
+  RULES: 'family_rules',
   SETTINGS: 'family_settings',
 };
 
@@ -476,6 +477,66 @@ export const storage = {
     return true;
   },
 
+  getRules(): FamilyRule[] {
+    const data = localStorage.getItem(STORAGE_KEYS.RULES);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setRules(rules: FamilyRule[]): void {
+    localStorage.setItem(STORAGE_KEYS.RULES, JSON.stringify(rules));
+  },
+
+  addRule(rule: Omit<FamilyRule, 'id' | 'createdAt' | 'updatedAt'>): FamilyRule {
+    const rules = this.getRules();
+    const newRule: FamilyRule = {
+      ...rule,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    rules.push(newRule);
+    this.setRules(rules);
+    changeTracker.recordChange('rules', newRule.id, 'create');
+    return newRule;
+  },
+
+  updateRule(id: string, data: Partial<FamilyRule>): FamilyRule | null {
+    const rules = this.getRules();
+    const index = rules.findIndex(r => r.id === id);
+    if (index === -1) return null;
+    rules[index] = {
+      ...rules[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setRules(rules);
+    changeTracker.recordChange('rules', id, 'update');
+    return rules[index];
+  },
+
+  deleteRule(id: string): boolean {
+    const rules = this.getRules();
+    const filtered = rules.filter(r => r.id !== id);
+    if (filtered.length === rules.length) return false;
+    this.setRules(filtered);
+    changeTracker.recordChange('rules', id, 'delete');
+    return true;
+  },
+
+  reorderRules(startIndex: number, endIndex: number): FamilyRule[] {
+    const rules = this.getRules();
+    const [removed] = rules.splice(startIndex, 1);
+    rules.splice(endIndex, 0, removed);
+    const reorderedRules = rules.map((rule, index) => ({
+      ...rule,
+      sortOrder: index,
+      updatedAt: new Date().toISOString(),
+    }));
+    this.setRules(reorderedRules);
+    changeTracker.recordChange('rules', 'reorder', 'update');
+    return reorderedRules;
+  },
+
   exportData(): string {
     const data = {
       branches: this.getBranches(),
@@ -487,6 +548,7 @@ export const storage = {
       templates: this.getTemplates(),
       offerings: this.getOfferings(),
       locations: this.getLocations(),
+      rules: this.getRules(),
       settings: this.getSettings(),
       exportedAt: new Date().toISOString(),
     };
@@ -505,6 +567,7 @@ export const storage = {
       if (data.templates) this.setTemplates(data.templates);
       if (data.offerings) this.setOfferings(data.offerings);
       if (data.locations) this.setLocations(data.locations);
+      if (data.rules) this.setRules(data.rules);
       if (data.settings) this.updateSettings(data.settings);
       return true;
     } catch {
@@ -522,6 +585,7 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.TEMPLATES);
     localStorage.removeItem(STORAGE_KEYS.OFFERINGS);
     localStorage.removeItem(STORAGE_KEYS.LOCATIONS);
+    localStorage.removeItem(STORAGE_KEYS.RULES);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
   },
 };

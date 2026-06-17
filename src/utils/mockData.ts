@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch, FamilyEvent, OfferingItem } from '@/types';
+import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch, FamilyEvent, OfferingItem, FamilyRule } from '@/types';
 
 const getFutureDate = (daysFromNow: number): string => {
   const date = new Date();
@@ -461,6 +461,67 @@ export const mockOfferings: OfferingItem[] = [
   },
 ];
 
+export const mockRules: FamilyRule[] = [
+  {
+    id: 'rule-1',
+    title: '孝悌为先',
+    content: '百善孝为先，子孙须敬重长辈，孝顺父母，友爱兄弟姊妹。每日晨起问安，遇事禀明而行。兄友弟恭，妯娌和睦，以立齐家之本。',
+    sourceAncestor: '张老太爷',
+    sortOrder: 0,
+    branchId: 'branch-1',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'rule-2',
+    title: '勤俭持家',
+    content: '一粥一饭，当思来处不易；半丝半缕，恒念物力维艰。宜未雨而绸缪，毋临渴而掘井。自奉必须俭约，宴客切勿流连。',
+    sourceAncestor: '张老太爷',
+    sortOrder: 1,
+    branchId: 'branch-1',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'rule-3',
+    title: '读书明理',
+    content: '子孙须立志读书，非徒科第，实为明理。四书五经，悉心研读；圣贤教诲，铭记于心。知书达理，方能立身处世，不负先人所望。',
+    sourceAncestor: '张爷爷',
+    sortOrder: 2,
+    branchId: 'branch-1',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'rule-4',
+    title: '诚信待人',
+    content: '言必信，行必果。与人交往，以诚相待，不可有欺诈之心。一诺千金，言出必行。宁可人负我，不可我负人。',
+    sourceAncestor: '张老太爷',
+    sortOrder: 3,
+    branchId: 'branch-2',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'rule-5',
+    title: '睦邻亲友',
+    content: '远亲不如近邻，邻里之间须和睦相处。遇有纷争，以忍为高；见人有难，倾力相助。宗族亲眷，时相往来，共庆佳节，同悼哀思。',
+    sourceAncestor: '张老太君',
+    sortOrder: 4,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'rule-6',
+    title: '祭祀诚敬',
+    content: '祖宗虽远，祭祀不可不诚。每逢忌日、清明、中元、春节，须备香烛祭品，虔诚祭拜。追思先人恩德，传承家族文脉，使后世子孙不忘根本。',
+    sourceAncestor: '张老太爷',
+    sortOrder: 5,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+];
+
 export const initializeMockData = (): void => {
   const existingBranches = localStorage.getItem('family_branches');
   if (!existingBranches || JSON.parse(existingBranches).length === 0) {
@@ -495,5 +556,10 @@ export const initializeMockData = (): void => {
   const existingOfferings = localStorage.getItem('ritual_offerings');
   if (!existingOfferings || JSON.parse(existingOfferings).length === 0) {
     localStorage.setItem('ritual_offerings', JSON.stringify(mockOfferings));
+  }
+
+  const existingRules = localStorage.getItem('family_rules');
+  if (!existingRules || JSON.parse(existingRules).length === 0) {
+    localStorage.setItem('family_rules', JSON.stringify(mockRules));
   }
 };
