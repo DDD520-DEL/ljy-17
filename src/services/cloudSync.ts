@@ -15,11 +15,12 @@ import {
   OfferingItem,
   MemorialLocation,
   FamilyRule,
+  MemorialArticle,
 } from '@/types';
 
 type EntityWithTimestamp = { id: string; updatedAt?: string; createdAt?: string };
 
-const ENTITY_TYPES: EntityType[] = ['branches', 'ancestors', 'rituals', 'events', 'reservations', 'members', 'templates', 'offerings', 'locations', 'rules', 'settings'];
+const ENTITY_TYPES: EntityType[] = ['branches', 'ancestors', 'rituals', 'events', 'reservations', 'members', 'templates', 'offerings', 'locations', 'rules', 'articles', 'settings'];
 
 const UPDATE_TIME_FIELDS: Record<EntityType, string> = {
   branches: 'updatedAt',
@@ -32,6 +33,7 @@ const UPDATE_TIME_FIELDS: Record<EntityType, string> = {
   offerings: 'updatedAt',
   locations: 'updatedAt',
   rules: 'updatedAt',
+  articles: 'updatedAt',
   settings: 'updatedAt',
 };
 
@@ -200,6 +202,7 @@ type LocalDataShape = {
   offerings: OfferingItem[];
   locations: MemorialLocation[];
   rules: FamilyRule[];
+  articles: MemorialArticle[];
   settings: AppSettings;
 };
 

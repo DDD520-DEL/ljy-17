@@ -24,6 +24,8 @@ import OfferingsPage from "@/pages/Offerings";
 import LocationsPage from "@/pages/Locations";
 import FamilyRulesList from "@/pages/FamilyRules";
 import FamilyRuleForm from "@/pages/FamilyRules/FamilyRuleForm";
+import MemorialArticlesList from "@/pages/MemorialArticles";
+import MemorialArticleForm from "@/pages/MemorialArticles/MemorialArticleForm";
 import { useAppStore } from "@/store/useAppStore";
 
 function AppInitializer() {
@@ -117,6 +119,10 @@ export default function App() {
           <Route path="family-rules" element={<FamilyRulesList />} />
           <Route path="family-rules/new" element={<FamilyRuleForm mode="create" />} />
           <Route path="family-rules/:id/edit" element={<FamilyRuleForm mode="edit" />} />
+          
+          <Route path="memorial-articles" element={<MemorialArticlesList />} />
+          <Route path="memorial-articles/new" element={<MemorialArticleForm mode="create" />} />
+          <Route path="memorial-articles/:id/edit" element={<MemorialArticleForm mode="edit" />} />
           
           <Route path="album" element={<Album />} />
           

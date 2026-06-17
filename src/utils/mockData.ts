@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch, FamilyEvent, OfferingItem, FamilyRule } from '@/types';
+import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch, FamilyEvent, OfferingItem, FamilyRule, MemorialArticle } from '@/types';
 
 const getFutureDate = (daysFromNow: number): string => {
   const date = new Date();
@@ -522,6 +522,57 @@ export const mockRules: FamilyRule[] = [
   },
 ];
 
+export const mockArticles: MemorialArticle[] = [
+  {
+    id: 'article-1',
+    ancestorId: '3',
+    ancestorName: '张爷爷',
+    title: '清明祭扫忆祖父',
+    content: '又是一年清明时，细雨纷飞，思绪万千。站在爷爷的墓前，往事如潮水般涌上心头。\n\n爷爷是一位退休教师，教书育人四十载，桃李满天下。记得小时候，爷爷总是拿着那本泛黄的《论语》，教我读"学而时习之，不亦说乎"。他的声音温和而坚定，每一个字都饱含着对知识的敬畏。\n\n爷爷常说："读书人，要明理，要正直。"这句话我一直铭记在心。如今我也走上了工作岗位，每当遇到困难和诱惑时，爷爷的话就会在耳边响起，让我坚守本心。\n\n爷爷虽然离开了我们，但他的教诲永远留在我们心中。今天献上一束鲜花，寄托我们无尽的思念。愿爷爷在天堂安息，您的子孙永远怀念您。',
+    date: '2024-04-04',
+    author: '张小明',
+    branchId: 'branch-1',
+    createdAt: '2024-04-04T10:30:00Z',
+    updatedAt: '2024-04-04T10:30:00Z',
+  },
+  {
+    id: 'article-2',
+    ancestorId: '3',
+    ancestorName: '张爷爷',
+    title: '爷爷的老花镜',
+    content: '整理旧物时，发现了爷爷的那副老花镜。镜框已经有些磨损，镜片也有细微的划痕，但擦拭干净后，依然能看清字。\n\n这副老花镜陪伴了爷爷几十年。每天晚上，爷爷都会戴着它，在昏黄的灯光下批改学生的作业，或者阅读他喜爱的古典文学。有时候我半夜醒来，还能看到书房的灯亮着，爷爷戴着这副眼镜，专注地写着什么。\n\n记得有一次，我不小心把这副眼镜碰到地上，镜框摔歪了。爷爷没有责备我，只是笑着说："没事，修修还能用。"后来他自己用小螺丝刀 carefully 地把镜框修好了，又戴了很多年。\n\n如今，这副老花镜静静地躺在我的书柜里。每当看到它，就仿佛看到爷爷戴着它伏案工作的身影。爷爷虽然离开了，但他对知识的热爱、对工作的认真，永远激励着我前行。',
+    date: '2024-09-10',
+    author: '张三',
+    branchId: 'branch-1',
+    createdAt: '2024-09-10T15:20:00Z',
+    updatedAt: '2024-09-10T15:20:00Z',
+  },
+  {
+    id: 'article-3',
+    ancestorId: '4',
+    ancestorName: '张奶奶',
+    title: '奶奶的红烧肉',
+    content: '今天试着做了奶奶教我的红烧肉，虽然味道已经很接近了，但总觉得还是少了点什么。\n\n奶奶做的红烧肉，是我童年最美好的回忆之一。每逢过节，奶奶都会早早地开始准备。她选的五花肉，总是肥瘦相间，层次分明。先用开水焯过，再用冰糖炒出糖色，然后加入各种调料，小火慢炖几个小时。\n\n炖肉的香味，会飘满整个屋子。我和弟弟妹妹总是守在厨房门口，不停地问："奶奶，肉好了吗？"奶奶总是笑着说："快了快了，小馋猫们再等等。"\n\n肉炖好后，奶奶会先盛出一碗，让我们几个孩子先吃。那肥肉入口即化，瘦肉软烂入味，甜咸适中，回味无穷。奶奶总是看着我们吃，脸上洋溢着满足的笑容，自己却很少吃。\n\n如今，奶奶已经离开了我们，但她做的红烧肉的味道，永远留在了我的记忆里。今天做这道菜，也是为了纪念奶奶，让她的味道，在我们心中延续。奶奶，我们永远想念您。',
+    date: '2024-10-15',
+    author: '张小红',
+    branchId: 'branch-1',
+    createdAt: '2024-10-15T12:00:00Z',
+    updatedAt: '2024-10-15T12:00:00Z',
+  },
+  {
+    id: 'article-4',
+    ancestorId: '1',
+    ancestorName: '张老太爷',
+    title: '百年诞辰忆曾祖',
+    content: '今天是曾祖父张老太爷诞辰一百周年纪念日。我们全家齐聚一堂，共同缅怀这位可敬的老人。\n\n曾祖父生于1920年，那是一个动荡的年代。他勤劳一生，养育了五子二女，在那个物资匮乏的年代，硬是把孩子们都拉扯大了。听爷爷说，曾祖父每天天不亮就起床干活，晚上要等到孩子们都睡了才休息。\n\n曾祖父为人正直善良，深受乡邻敬重。谁家有困难，他总是慷慨相助。他常说："做人要厚道，能帮人处且帮人。"这句话成了我们家的家训，代代相传。\n\n虽然我没有见过曾祖父，但从长辈们的口中，我能感受到他的伟大。他虽然没有读过多少书，但他的人生智慧，比任何书本都要深刻。他用自己的行动，教会了我们什么是责任，什么是担当。\n\n今天，我们在曾祖父的墓前献上最隆重的祭祀，表达我们的敬意和思念。曾祖父，您的子孙没有辜负您的期望，我们会把您的美德传承下去，让张家的家风，代代相传。',
+    date: '2024-08-20',
+    author: '张大山',
+    branchId: 'branch-1',
+    createdAt: '2024-08-20T11:00:00Z',
+    updatedAt: '2024-08-20T11:00:00Z',
+  },
+];
+
 export const initializeMockData = (): void => {
   const existingBranches = localStorage.getItem('family_branches');
   if (!existingBranches || JSON.parse(existingBranches).length === 0) {
@@ -561,5 +612,10 @@ export const initializeMockData = (): void => {
   const existingRules = localStorage.getItem('family_rules');
   if (!existingRules || JSON.parse(existingRules).length === 0) {
     localStorage.setItem('family_rules', JSON.stringify(mockRules));
+  }
+
+  const existingArticles = localStorage.getItem('memorial_articles');
+  if (!existingArticles || JSON.parse(existingArticles).length === 0) {
+    localStorage.setItem('memorial_articles', JSON.stringify(mockArticles));
   }
 };

@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation, FamilyRule } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation, FamilyRule, MemorialArticle } from '@/types';
 import { changeTracker } from '@/services/changeTracker';
 
 const STORAGE_KEYS = {
@@ -12,6 +12,7 @@ const STORAGE_KEYS = {
   OFFERINGS: 'ritual_offerings',
   LOCATIONS: 'memorial_locations',
   RULES: 'family_rules',
+  ARTICLES: 'memorial_articles',
   SETTINGS: 'family_settings',
 };
 
@@ -551,6 +552,52 @@ export const storage = {
     return reorderedRules;
   },
 
+  getArticles(): MemorialArticle[] {
+    const data = localStorage.getItem(STORAGE_KEYS.ARTICLES);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setArticles(articles: MemorialArticle[]): void {
+    localStorage.setItem(STORAGE_KEYS.ARTICLES, JSON.stringify(articles));
+  },
+
+  addArticle(article: Omit<MemorialArticle, 'id' | 'createdAt' | 'updatedAt'>): MemorialArticle {
+    const articles = this.getArticles();
+    const newArticle: MemorialArticle = {
+      ...article,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    articles.push(newArticle);
+    this.setArticles(articles);
+    changeTracker.recordChange('articles', newArticle.id, 'create');
+    return newArticle;
+  },
+
+  updateArticle(id: string, data: Partial<MemorialArticle>): MemorialArticle | null {
+    const articles = this.getArticles();
+    const index = articles.findIndex(a => a.id === id);
+    if (index === -1) return null;
+    articles[index] = {
+      ...articles[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setArticles(articles);
+    changeTracker.recordChange('articles', id, 'update');
+    return articles[index];
+  },
+
+  deleteArticle(id: string): boolean {
+    const articles = this.getArticles();
+    const filtered = articles.filter(a => a.id !== id);
+    if (filtered.length === articles.length) return false;
+    this.setArticles(filtered);
+    changeTracker.recordChange('articles', id, 'delete');
+    return true;
+  },
+
   exportData(): string {
     const data = {
       branches: this.getBranches(),
@@ -563,6 +610,7 @@ export const storage = {
       offerings: this.getOfferings(),
       locations: this.getLocations(),
       rules: this.getRules(),
+      articles: this.getArticles(),
       settings: this.getSettings(),
       exportedAt: new Date().toISOString(),
     };
@@ -582,6 +630,7 @@ export const storage = {
       if (data.offerings) this.setOfferings(data.offerings);
       if (data.locations) this.setLocations(data.locations);
       if (data.rules) this.setRules(data.rules);
+      if (data.articles) this.setArticles(data.articles);
       if (data.settings) this.updateSettings(data.settings);
       return true;
     } catch {
@@ -600,6 +649,7 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.OFFERINGS);
     localStorage.removeItem(STORAGE_KEYS.LOCATIONS);
     localStorage.removeItem(STORAGE_KEYS.RULES);
+    localStorage.removeItem(STORAGE_KEYS.ARTICLES);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
   },
 };

@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Plus,
   Image as ImageIcon,
+  BookText,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getAge, getLunarCalendar, getGenerationName, groupByYear } from '@/utils/dateUtils';
@@ -179,7 +180,7 @@ function TreeNodeComponent({ node, level, highlightId }: TreeNodeComponentProps)
 export default function AncestorDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { ancestors, rituals, members, deleteAncestor } = useAppStore();
+  const { ancestors, rituals, members, articles, deleteAncestor } = useAppStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
 
@@ -206,6 +207,10 @@ export default function AncestorDetail() {
 
   const ancestorRituals = rituals
     .filter(r => r.ancestorId === ancestor.id)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const ancestorArticles = articles
+    .filter(a => a.ancestorId === ancestor.id)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const ritualsByYear = groupByYear(ancestorRituals);
@@ -316,10 +321,14 @@ export default function AncestorDetail() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="stat-card">
                 <p className="text-brown-500 text-sm mb-1">祭祀记录</p>
                 <p className="text-3xl font-bold text-gold-600 font-serif">{ancestorRituals.length}</p>
+              </div>
+              <div className="stat-card">
+                <p className="text-brown-500 text-sm mb-1">追思文章</p>
+                <p className="text-3xl font-bold text-rose-600 font-serif">{ancestorArticles.length}</p>
               </div>
               <div className="stat-card">
                 <p className="text-brown-500 text-sm mb-1">家族世代</p>
@@ -508,6 +517,98 @@ export default function AncestorDetail() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="section-title !mb-0">
+                <BookText className="w-6 h-6 text-rose-500" />
+                追思文章
+                <span className="text-sm font-normal text-brown-500 ml-2">
+                  共 {ancestorArticles.length} 篇
+                </span>
+              </h3>
+              <Link
+                to={`/memorial-articles/new?ancestorId=${ancestor.id}`}
+                className="btn-rose inline-flex items-center gap-2 text-sm py-2 px-4"
+              >
+                <Plus className="w-4 h-4" />
+                撰写追思
+              </Link>
+            </div>
+
+            {ancestorArticles.length === 0 ? (
+              <div className="text-center py-12">
+                <BookText className="w-16 h-16 mx-auto mb-4 text-brown-200" />
+                <p className="text-brown-500 mb-4">暂无追思文章</p>
+                <p className="text-sm text-brown-400 mb-6">祭扫之后，有感而发，写下文字寄托哀思</p>
+                <Link
+                  to={`/memorial-articles/new?ancestorId=${ancestor.id}`}
+                  className="btn-primary inline-flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  撰写第一篇追思
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {ancestorArticles.slice(0, 3).map((article, index) => (
+                  <div
+                    key={article.id}
+                    className="flex items-start gap-4 p-4 bg-rose-50 rounded-xl border border-rose-100 hover:border-rose-300 transition-all"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-400 to-rose-600 flex flex-col items-center justify-center shadow-soft flex-shrink-0">
+                      <span className="text-lg font-bold text-white leading-none">
+                        {new Date(article.date).getDate()}
+                      </span>
+                      <span className="text-xs text-white/90 mt-0.5">
+                        {new Date(article.date).getMonth() + 1}月
+                      </span>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-serif font-semibold text-brown-800 mb-1">
+                        {article.title}
+                      </h4>
+                      <div className="flex items-center gap-3 mb-2 text-sm">
+                        {article.author && (
+                          <span className="inline-flex items-center gap-1 text-brown-500">
+                            <User className="w-3.5 h-3.5" />
+                            {article.author}
+                          </span>
+                        )}
+                        <span className="inline-flex items-center gap-1 text-brown-400">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {formatDate(article.date)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-brown-600 line-clamp-2 whitespace-pre-wrap">
+                        {article.content}
+                      </p>
+                    </div>
+
+                    <Link
+                      to={`/memorial-articles/${article.id}/edit`}
+                      className="p-2 hover:bg-rose-100 rounded-lg transition-colors flex-shrink-0"
+                    >
+                      <Edit3 className="w-4 h-4 text-rose-500" />
+                    </Link>
+                  </div>
+                ))}
+
+                {ancestorArticles.length > 3 && (
+                  <div className="text-center pt-2">
+                    <Link
+                      to={`/memorial-articles?ancestorId=${ancestor.id}`}
+                      className="inline-flex items-center gap-2 text-sm text-rose-600 hover:text-rose-700"
+                    >
+                      查看全部 {ancestorArticles.length} 篇追思文章 →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>

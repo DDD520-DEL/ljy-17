@@ -40,6 +40,12 @@ body {
            shadow-glow hover:shadow-lg;
   }
 
+  .btn-rose {
+    @apply px-6 py-2.5 bg-rose-500 text-white rounded-lg font-medium
+           hover:bg-rose-600 transition-all duration-300
+           shadow-soft hover:shadow-lg;
+  }
+
   .card {
     @apply bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-soft
            border border-brown-100 transition-all duration-300

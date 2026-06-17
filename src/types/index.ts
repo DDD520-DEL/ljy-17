@@ -222,7 +222,20 @@ export interface FamilyRule {
   updatedAt: string;
 }
 
-export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings' | 'locations' | 'rules';
+export interface MemorialArticle {
+  id: string;
+  ancestorId: string;
+  ancestorName?: string;
+  title: string;
+  content: string;
+  date: string;
+  author?: string;
+  branchId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings' | 'locations' | 'rules' | 'articles';
 
 export interface ConflictItem {
   entityType: EntityType;
@@ -253,6 +266,7 @@ export interface CloudDataSnapshot {
   offerings: OfferingItem[];
   locations: MemorialLocation[];
   rules: FamilyRule[];
+  articles: MemorialArticle[];
   settings: AppSettings;
   snapshotAt: string;
   version: number;
