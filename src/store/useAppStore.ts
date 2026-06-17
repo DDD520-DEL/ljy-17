@@ -93,7 +93,7 @@ interface AppState {
   addRule: (rule: Omit<FamilyRule, 'id' | 'createdAt' | 'updatedAt'>) => FamilyRule;
   updateRule: (id: string, data: Partial<FamilyRule>) => FamilyRule | null;
   deleteRule: (id: string) => boolean;
-  reorderRules: (startIndex: number, endIndex: number) => FamilyRule[];
+  reorderRules: (sourceId: string, targetId: string) => FamilyRule[];
 
   updateSettings: (settings: Partial<AppSettings>) => AppSettings;
 
@@ -519,8 +519,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     return success;
   },
 
-  reorderRules: (startIndex, endIndex) => {
-    const reorderedRules = storage.reorderRules(startIndex, endIndex);
+  reorderRules: (sourceId, targetId) => {
+    const reorderedRules = storage.reorderRules(sourceId, targetId);
     set({ rules: reorderedRules });
     return reorderedRules;
   },

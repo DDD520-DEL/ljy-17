@@ -523,15 +523,29 @@ export const storage = {
     return true;
   },
 
-  reorderRules(startIndex: number, endIndex: number): FamilyRule[] {
+  reorderRules(sourceId: string, targetId: string): FamilyRule[] {
     const rules = this.getRules();
-    const [removed] = rules.splice(startIndex, 1);
-    rules.splice(endIndex, 0, removed);
-    const reorderedRules = rules.map((rule, index) => ({
-      ...rule,
-      sortOrder: index,
-      updatedAt: new Date().toISOString(),
-    }));
+    const sortedRules = [...rules].sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const sourceRule = sortedRules.find(r => r.id === sourceId);
+    const targetRule = sortedRules.find(r => r.id === targetId);
+
+    if (!sourceRule || !targetRule || sourceId === targetId) {
+      return sortedRules;
+    }
+
+    const tempOrder = sourceRule.sortOrder;
+    sourceRule.sortOrder = targetRule.sortOrder;
+    targetRule.sortOrder = tempOrder;
+
+    const reorderedRules = [...sortedRules]
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((rule, index) => ({
+        ...rule,
+        sortOrder: index,
+        updatedAt: new Date().toISOString(),
+      }));
+
     this.setRules(reorderedRules);
     changeTracker.recordChange('rules', 'reorder', 'update');
     return reorderedRules;

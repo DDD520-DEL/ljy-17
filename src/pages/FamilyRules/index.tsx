@@ -40,13 +40,15 @@ export default function FamilyRulesList() {
 
   const handleMoveUp = (index: number) => {
     if (index > 0) {
-      reorderRules(index, index - 1);
+      const targetRule = sortedRules[index - 1];
+      reorderRules(sortedRules[index].id, targetRule.id);
     }
   };
 
   const handleMoveDown = (index: number) => {
     if (index < sortedRules.length - 1) {
-      reorderRules(index, index + 1);
+      const targetRule = sortedRules[index + 1];
+      reorderRules(sortedRules[index].id, targetRule.id);
     }
   };
 
