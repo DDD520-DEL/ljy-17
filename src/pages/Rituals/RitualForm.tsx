@@ -15,6 +15,8 @@ export default function RitualForm({ mode }: RitualFormProps) {
   const [searchParams] = useSearchParams();
   const preselectedAncestorId = searchParams.get('ancestorId');
   const templateId = searchParams.get('templateId');
+  const preselectedDate = searchParams.get('date');
+  const solarTerm = searchParams.get('solarTerm');
   
   const { addRitual, updateRitual, deleteRitual, rituals, ancestors, branches, templates, offerings, settings, locations } = useAppStore();
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -27,11 +29,11 @@ export default function RitualForm({ mode }: RitualFormProps) {
   const [formData, setFormData] = useState<Partial<Ritual>>({
     ancestorId: preselectedAncestorId || '',
     ancestorName: '',
-    date: new Date().toISOString().split('T')[0],
+    date: preselectedDate || new Date().toISOString().split('T')[0],
     location: '',
     participants: [],
     offerings: [],
-    notes: '',
+    notes: solarTerm ? `${solarTerm}祭祀` : '',
     photos: [],
     branchId: '',
   });

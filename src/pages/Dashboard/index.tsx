@@ -18,14 +18,21 @@ import {
   Sparkles,
   Package,
   AlertTriangle,
+  Sun,
+  Plus,
 } from 'lucide-react';
 import { FAMILY_EVENT_TYPE_META } from '@/types';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getLunarCalendar, getAge, calculateDaysUntilFutureDate, getCalendarDays, getEventsForMonth, isToday, isUpcoming } from '@/utils/dateUtils';
+import { getCurrentSolarTerm, getNextSolarTerm, getDaysUntilNextTerm, formatSolarTermDate } from '@/utils/solarTerms';
 import { AlbumPhoto } from '@/types';
 
 export default function Dashboard() {
   const { ancestors, rituals, events, reservations, members, reminders, branches, settings, offerings } = useAppStore();
+  
+  const currentTerm = getCurrentSolarTerm();
+  const nextTerm = getNextSolarTerm();
+  const daysUntilNext = getDaysUntilNextTerm();
   
   const pendingReservations = reservations.filter(r => r.status === 'pending').length;
   
@@ -191,6 +198,82 @@ export default function Dashboard() {
             </Link>
           );
         })}
+      </div>
+
+      <div className={`card bg-gradient-to-br ${currentTerm.color} text-white overflow-hidden relative`}>
+        <div className="absolute top-0 right-0 opacity-10 text-9xl leading-none transform translate-x-8 -translate-y-4 pointer-events-none">
+          {currentTerm.icon}
+        </div>
+        <div className="relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <span className="text-4xl">{currentTerm.icon}</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <Sun className="w-5 h-5" />
+                  <span className="text-sm text-white/80">当前节气</span>
+                </div>
+                <h3 className="font-serif text-2xl font-bold">{currentTerm.name}</h3>
+                <p className="text-sm text-white/80">{currentTerm.englishName} · {formatSolarTermDate(currentTerm)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2">
+                <p className="text-2xl font-bold">{daysUntilNext}</p>
+                <p className="text-xs text-white/80">天后{nextTerm.name}</p>
+              </div>
+              <Link
+                to="/solar-terms"
+                className="px-4 py-2 bg-white text-orange-600 rounded-xl font-medium hover:bg-white/90 transition-colors flex items-center gap-2"
+              >
+                查看节气指南
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+          
+          <p className="text-white/90 mb-4 max-w-2xl">{currentTerm.description}</p>
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {currentTerm.customs.slice(0, 4).map((custom, i) => (
+              <span key={i} className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm">
+                {custom}
+              </span>
+            ))}
+          </div>
+          
+          {currentTerm.hasRitualCustom && currentTerm.ritualSuggestion && (
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="flex-1">
+                  <p className="font-medium mb-1 flex items-center gap-2">
+                    <Flame className="w-4 h-4" />
+                    祭祀建议
+                  </p>
+                  <p className="text-sm text-white/90">{currentTerm.ritualSuggestion}</p>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <Link
+                    to={`/rituals/new?date=${currentTerm.date}&solarTerm=${currentTerm.name}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white text-orange-600 rounded-lg font-medium hover:bg-white/90 transition-colors text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    创建祭祀记录
+                  </Link>
+                  <Link
+                    to={`/reservations/new?date=${currentTerm.date}&solarTerm=${currentTerm.name}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 text-white rounded-lg font-medium hover:bg-white/30 transition-colors text-sm"
+                  >
+                    <CalendarDays className="w-4 h-4" />
+                    预约祭祀
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">

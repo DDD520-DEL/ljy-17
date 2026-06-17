@@ -29,6 +29,7 @@ import MemorialArticleForm from "@/pages/MemorialArticles/MemorialArticleForm";
 import ExpensesList from "@/pages/Expenses";
 import ExpenseForm from "@/pages/Expenses/ExpenseForm";
 import OfferingWikiPage from "@/pages/OfferingWiki";
+import SolarTermsGuide from "@/pages/SolarTerms";
 import { useAppStore } from "@/store/useAppStore";
 
 function AppInitializer() {
@@ -122,6 +123,7 @@ export default function App() {
           
           <Route path="offerings" element={<OfferingsPage />} />
           <Route path="offering-wiki" element={<OfferingWikiPage />} />
+          <Route path="solar-terms" element={<SolarTermsGuide />} />
           <Route path="locations" element={<LocationsPage />} />
           
           <Route path="family-rules" element={<FamilyRulesList />} />

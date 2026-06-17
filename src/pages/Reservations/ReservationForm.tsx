@@ -15,17 +15,19 @@ export default function ReservationForm({ mode }: ReservationFormProps) {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const preselectedAncestorId = searchParams.get('ancestorId');
+  const preselectedDate = searchParams.get('date');
+  const solarTerm = searchParams.get('solarTerm');
   
   const { addReservation, updateReservation, deleteReservation, reservations, ancestors } = useAppStore();
   
   const [formData, setFormData] = useState<Partial<RitualReservation>>({
     ancestorId: preselectedAncestorId || '',
     ancestorName: '',
-    date: '',
+    date: preselectedDate || '',
     location: '',
     participants: [],
     offerings: [],
-    notes: '',
+    notes: solarTerm ? `${solarTerm}祭祀` : '',
     status: 'pending',
   });
   
