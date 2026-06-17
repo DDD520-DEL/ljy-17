@@ -69,8 +69,13 @@ export default function SolarTermsGuide() {
   };
 
   const createRitualLink = (term: SolarTermWithDate) => {
-    const ancestorParam = ancestors.length > 0 ? `?ancestorId=${ancestors[0].id}` : '';
-    return `/rituals/new${ancestorParam}&date=${term.date}&solarTerm=${term.name}`;
+    const params = new URLSearchParams();
+    if (ancestors.length > 0) {
+      params.set('ancestorId', ancestors[0].id);
+    }
+    params.set('date', term.date);
+    params.set('solarTerm', term.name);
+    return `/rituals/new?${params.toString()}`;
   };
 
   return (
