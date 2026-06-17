@@ -136,7 +136,7 @@ function RelationshipGraphContent() {
           generation: member.generation,
           branchId: member.branchId,
           branchColor: getBranchColor(member.branchId),
-          detailUrl: '/members',
+          detailUrl: `/members/${member.id}`,
           relationship: member.relationship,
         },
       });
@@ -210,7 +210,6 @@ function RelationshipGraphContent() {
               strokeDasharray: EDGE_STYLES.sibling.dashArray,
             },
             data: { type: 'sibling', label: EDGE_STYLES.sibling.label },
-            hidden: true,
           });
         }
       }
