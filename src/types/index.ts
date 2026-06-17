@@ -158,7 +158,34 @@ export interface SyncState {
   pendingChanges: number;
 }
 
-export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates';
+export type FamilyEventType = 'wedding' | 'birth' | 'move' | 'birthday' | 'promotion' | 'graduation' | 'travel' | 'other';
+
+export interface FamilyEvent {
+  id: string;
+  type: FamilyEventType;
+  title: string;
+  date: string;
+  description?: string;
+  participants: string[];
+  photos?: string[];
+  location?: string;
+  branchId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const FAMILY_EVENT_TYPE_META: Record<FamilyEventType, { label: string; icon: string; color: string; bgColor: string }> = {
+  wedding: { label: '婚礼', icon: '💍', color: 'text-pink-600', bgColor: 'bg-pink-50' },
+  birth: { label: '添丁', icon: '👶', color: 'text-blue-600', bgColor: 'bg-blue-50' },
+  move: { label: '乔迁', icon: '🏠', color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+  birthday: { label: '寿辰', icon: '🎂', color: 'text-amber-600', bgColor: 'bg-amber-50' },
+  promotion: { label: '晋升', icon: '🎖️', color: 'text-purple-600', bgColor: 'bg-purple-50' },
+  graduation: { label: '学业', icon: '🎓', color: 'text-indigo-600', bgColor: 'bg-indigo-50' },
+  travel: { label: '旅行', icon: '✈️', color: 'text-cyan-600', bgColor: 'bg-cyan-50' },
+  other: { label: '其他', icon: '📌', color: 'text-gray-600', bgColor: 'bg-gray-50' },
+};
+
+export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events';
 
 export interface ConflictItem {
   entityType: EntityType;
@@ -182,6 +209,7 @@ export interface CloudDataSnapshot {
   branches: FamilyBranch[];
   ancestors: Ancestor[];
   rituals: Ritual[];
+  events: FamilyEvent[];
   reservations: RitualReservation[];
   members: FamilyMember[];
   templates: RitualTemplate[];

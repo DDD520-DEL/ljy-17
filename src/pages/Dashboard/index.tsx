@@ -15,13 +15,15 @@ import {
   Camera,
   ZoomIn,
   CalendarRange,
+  Sparkles,
 } from 'lucide-react';
+import { FAMILY_EVENT_TYPE_META } from '@/types';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getLunarCalendar, getAge, calculateDaysUntilFutureDate, getCalendarDays, getEventsForMonth, isToday, isUpcoming } from '@/utils/dateUtils';
 import { AlbumPhoto } from '@/types';
 
 export default function Dashboard() {
-  const { ancestors, rituals, reservations, members, reminders, branches, settings } = useAppStore();
+  const { ancestors, rituals, events, reservations, members, reminders, branches, settings } = useAppStore();
   
   const pendingReservations = reservations.filter(r => r.status === 'pending').length;
 
@@ -65,6 +67,13 @@ export default function Dashboard() {
       bg: 'bg-green-50'
     },
     { 
+      label: '家族大事记', 
+      value: events.length, 
+      icon: Sparkles, 
+      color: 'from-pink-400 to-rose-500',
+      bg: 'bg-pink-50'
+    },
+    { 
       label: '家族成员', 
       value: members.length, 
       icon: Users, 
@@ -77,13 +86,16 @@ export default function Dashboard() {
     { label: '添加先人', icon: Flame, path: '/ancestors/new', color: 'text-orange-600 bg-orange-50 hover:bg-orange-100' },
     { label: '祭祀预约', icon: CalendarClock, path: '/reservations/new', color: 'text-blue-600 bg-blue-50 hover:bg-blue-100' },
     { label: '记录祭祀', icon: CalendarDays, path: '/rituals/new', color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100' },
+    { label: '家族大事', icon: Sparkles, path: '/family-events/new', color: 'text-pink-600 bg-pink-50 hover:bg-pink-100' },
     { label: '查看族谱', icon: TreeDeciduous, path: '/family-tree', color: 'text-green-600 bg-green-50 hover:bg-green-100' },
     { label: '家属管理', icon: Users, path: '/members', color: 'text-purple-600 bg-purple-50 hover:bg-purple-100' },
     { label: '纪念日历', icon: CalendarRange, path: '/calendar', color: 'text-amber-600 bg-amber-50 hover:bg-amber-100' },
+    { label: '家族相册', icon: Camera, path: '/album', color: 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100' },
   ];
 
   const upcomingReminders = reminders.slice(0, 6);
   const recentRituals = [...rituals].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 3);
+  const recentEvents = [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
   
   const upcomingReservations = [...reservations]
     .filter(r => r.status === 'pending')
@@ -145,7 +157,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -166,7 +178,7 @@ export default function Dashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+      <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
@@ -597,6 +609,108 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      <div className="card">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="section-title mb-0 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-gold-500" />
+            近期大事记
+          </h2>
+          <Link to="/family-events" className="text-sm text-brown-500 hover:text-brown-700 flex items-center gap-1">
+            查看全部 <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {recentEvents.length === 0 ? (
+          <div className="text-center py-12 text-brown-400">
+            <div className="text-5xl mb-3">✨</div>
+            <p>暂无大事记记录</p>
+            <Link to="/family-events/new" className="inline-block mt-3 text-gold-600 hover:text-gold-700 text-sm underline">
+              记录第一件大事 →
+            </Link>
+          </div>
+        ) : (
+          <div className="relative pl-6">
+            <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gradient-to-b from-pink-200 via-amber-200 to-emerald-200" />
+            <div className="space-y-4">
+              {recentEvents.map((event, index) => {
+                const typeMeta = FAMILY_EVENT_TYPE_META[event.type];
+                return (
+                  <div
+                    key={event.id}
+                    className="relative animate-slide-up"
+                    style={{ animationDelay: `${index * 80}ms` }}
+                  >
+                    <div className={`absolute -left-4 top-4 w-4 h-4 rounded-full border-2 border-white shadow-soft ${typeMeta.bgColor.replace('bg-', 'bg-')}`} style={{ backgroundColor: 'transparent', borderColor: 'white' }}>
+                      <div className={`w-full h-full rounded-full ${typeMeta.bgColor.replace('bg-', 'bg-')}`} />
+                    </div>
+                    <Link
+                      to={`/family-events/${event.id}/edit`}
+                      className={`ml-4 p-4 rounded-xl border transition-all hover:shadow-soft hover:border-gold-300 ${typeMeta.bgColor}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          <span className="text-2xl">{typeMeta.icon}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <h3 className="font-semibold text-brown-800">{event.title}</h3>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${typeMeta.color} bg-white/80`}>
+                              {typeMeta.label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-brown-500 mb-2">
+                            <span className="flex items-center gap-1">
+                              <CalendarDays className="w-3 h-3" />
+                              {formatDate(event.date)}
+                            </span>
+                            {event.location && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {event.location}
+                              </span>
+                            )}
+                            {event.participants.length > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                {event.participants.length}人
+                              </span>
+                            )}
+                          </div>
+                          {event.description && (
+                            <p className="text-sm text-brown-600 line-clamp-2">{event.description}</p>
+                          )}
+                          {event.photos && event.photos.length > 0 && (
+                            <div className="flex gap-1.5 mt-2">
+                              {event.photos.slice(0, 3).map((photo, i) => (
+                                <div
+                                  key={i}
+                                  className="w-12 h-12 rounded-lg overflow-hidden border border-white shadow-soft"
+                                >
+                                  <img
+                                    src={photo}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ))}
+                              {event.photos.length > 3 && (
+                                <div className="w-12 h-12 rounded-lg bg-white/60 flex items-center justify-center text-xs text-brown-500 border border-white shadow-soft">
+                                  +{event.photos.length - 3}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

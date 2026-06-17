@@ -1,10 +1,11 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent } from '@/types';
 import { changeTracker } from '@/services/changeTracker';
 
 const STORAGE_KEYS = {
   BRANCHES: 'family_branches',
   ANCESTORS: 'family_ancestors',
   RITUALS: 'family_rituals',
+  EVENTS: 'family_events',
   RESERVATIONS: 'family_reservations',
   MEMBERS: 'family_members',
   TEMPLATES: 'ritual_templates',
@@ -171,6 +172,52 @@ export const storage = {
     return true;
   },
 
+  getEvents(): FamilyEvent[] {
+    const data = localStorage.getItem(STORAGE_KEYS.EVENTS);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setEvents(events: FamilyEvent[]): void {
+    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+  },
+
+  addEvent(event: Omit<FamilyEvent, 'id' | 'createdAt' | 'updatedAt'>): FamilyEvent {
+    const events = this.getEvents();
+    const newEvent: FamilyEvent = {
+      ...event,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    events.push(newEvent);
+    this.setEvents(events);
+    changeTracker.recordChange('events', newEvent.id, 'create');
+    return newEvent;
+  },
+
+  updateEvent(id: string, data: Partial<FamilyEvent>): FamilyEvent | null {
+    const events = this.getEvents();
+    const index = events.findIndex(e => e.id === id);
+    if (index === -1) return null;
+    events[index] = {
+      ...events[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setEvents(events);
+    changeTracker.recordChange('events', id, 'update');
+    return events[index];
+  },
+
+  deleteEvent(id: string): boolean {
+    const events = this.getEvents();
+    const filtered = events.filter(e => e.id !== id);
+    if (filtered.length === events.length) return false;
+    this.setEvents(filtered);
+    changeTracker.recordChange('events', id, 'delete');
+    return true;
+  },
+
   getMembers(): FamilyMember[] {
     const data = localStorage.getItem(STORAGE_KEYS.MEMBERS);
     return data ? JSON.parse(data) : [];
@@ -322,6 +369,7 @@ export const storage = {
       branches: this.getBranches(),
       ancestors: this.getAncestors(),
       rituals: this.getRituals(),
+      events: this.getEvents(),
       reservations: this.getReservations(),
       members: this.getMembers(),
       templates: this.getTemplates(),
@@ -337,6 +385,7 @@ export const storage = {
       if (data.branches) this.setBranches(data.branches);
       if (data.ancestors) this.setAncestors(data.ancestors);
       if (data.rituals) this.setRituals(data.rituals);
+      if (data.events) this.setEvents(data.events);
       if (data.reservations) this.setReservations(data.reservations);
       if (data.members) this.setMembers(data.members);
       if (data.templates) this.setTemplates(data.templates);
@@ -351,6 +400,7 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.BRANCHES);
     localStorage.removeItem(STORAGE_KEYS.ANCESTORS);
     localStorage.removeItem(STORAGE_KEYS.RITUALS);
+    localStorage.removeItem(STORAGE_KEYS.EVENTS);
     localStorage.removeItem(STORAGE_KEYS.RESERVATIONS);
     localStorage.removeItem(STORAGE_KEYS.MEMBERS);
     localStorage.removeItem(STORAGE_KEYS.TEMPLATES);

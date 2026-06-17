@@ -8,6 +8,7 @@ import {
   FamilyMember,
   AppSettings,
   RitualTemplate,
+  FamilyEvent,
 } from '@/types';
 import { authService } from './authService';
 
@@ -48,6 +49,7 @@ export const syncService = {
     branches: FamilyBranch[];
     ancestors: Ancestor[];
     rituals: Ritual[];
+    events: FamilyEvent[];
     reservations: RitualReservation[];
     members: FamilyMember[];
     templates: RitualTemplate[];
@@ -66,6 +68,7 @@ export const syncService = {
         branches: data.branches,
         ancestors: data.ancestors,
         rituals: data.rituals,
+        events: data.events,
         reservations: data.reservations,
         members: data.members,
         templates: data.templates,
@@ -101,6 +104,7 @@ export const syncService = {
     branches: FamilyBranch[];
     ancestors: Ancestor[];
     rituals: Ritual[];
+    events: FamilyEvent[];
     reservations: RitualReservation[];
     members: FamilyMember[];
     templates: RitualTemplate[];
@@ -122,6 +126,7 @@ export const syncService = {
           branches: data.branches,
           ancestors: data.ancestors,
           rituals: data.rituals,
+          events: data.events,
           reservations: data.reservations,
           members: data.members,
           templates: data.templates,
@@ -133,7 +138,7 @@ export const syncService = {
         return {
           success: true,
           syncedAt: newSnapshot.snapshotAt,
-          changesApplied: { local: 0, remote: data.branches.length + data.ancestors.length + data.rituals.length + data.reservations.length + data.members.length + data.templates.length },
+          changesApplied: { local: 0, remote: data.branches.length + data.ancestors.length + data.rituals.length + data.events.length + data.reservations.length + data.members.length + data.templates.length },
         };
       }
 
@@ -151,6 +156,7 @@ export const syncService = {
     branches: FamilyBranch[];
     ancestors: Ancestor[];
     rituals: Ritual[];
+    events: FamilyEvent[];
     reservations: RitualReservation[];
     members: FamilyMember[];
     templates: RitualTemplate[];

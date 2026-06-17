@@ -23,6 +23,7 @@ const ENTITY_NAMES: Record<EntityType, string> = {
   branches: '家族分支',
   ancestors: '先人信息',
   rituals: '祭祀记录',
+  events: '家族大事记',
   reservations: '祭祀预约',
   members: '家族成员',
   templates: '祭祀模板',

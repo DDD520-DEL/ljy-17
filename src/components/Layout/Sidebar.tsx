@@ -12,6 +12,7 @@ import {
   Camera,
   FileText,
   CalendarRange,
+  Sparkles,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -21,6 +22,7 @@ const navItems = [
   { path: '/reservations', icon: CalendarClock, label: '祭祀预约' },
   { path: '/rituals', icon: CalendarDays, label: '祭祀记录' },
   { path: '/ritual-templates', icon: FileText, label: '祭祀模板' },
+  { path: '/family-events', icon: Sparkles, label: '家族大事记' },
   { path: '/album', icon: Camera, label: '家族相册' },
   { path: '/timeline', icon: ScrollText, label: '祭祀年表' },
   { path: '/calendar', icon: CalendarRange, label: '纪念日历' },

@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch } from '@/types';
+import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch, FamilyEvent } from '@/types';
 
 const getFutureDate = (daysFromNow: number): string => {
   const date = new Date();
@@ -191,6 +191,85 @@ export const mockRituals: Ritual[] = [
   },
 ];
 
+export const mockEvents: FamilyEvent[] = [
+  {
+    id: 'event-1',
+    type: 'wedding',
+    title: '张小明与王丽婚礼',
+    date: '2025-05-20',
+    description: '张小明与王丽喜结连理，在市区大酒店举办婚礼，宴请亲朋好友共15桌。',
+    participants: ['张小明', '王丽', '张三', '李四', '张小红', '张大山'],
+    location: '城市大酒店 宴会厅A',
+    branchId: 'branch-2',
+    photos: [
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20wedding%20ceremony%20bride%20and%20groom%20traditional%20red%20dress%20happy%20celebration&image_size=landscape_4_3',
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20wedding%20banquet%20hall%20decorated%20red%20gold%20elegant&image_size=landscape_16_9',
+    ],
+    createdAt: '2025-05-20T00:00:00Z',
+    updatedAt: '2025-05-20T00:00:00Z',
+  },
+  {
+    id: 'event-2',
+    type: 'birth',
+    title: '张小宝出生',
+    date: '2025-10-15',
+    description: '张小明之子张小宝出生，重3.6公斤，母子平安。',
+    participants: ['张小明', '王丽', '张三', '李四'],
+    location: '市妇幼保健院',
+    branchId: 'branch-2',
+    photos: [
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Newborn%20baby%20Chinese%20family%20happy%20parents%20holding%20infant%20warm%20lighting&image_size=landscape_4_3',
+    ],
+    createdAt: '2025-10-15T00:00:00Z',
+    updatedAt: '2025-10-15T00:00:00Z',
+  },
+  {
+    id: 'event-3',
+    type: 'move',
+    title: '张三一家乔迁新居',
+    date: '2024-12-28',
+    description: '张三一家搬进了位于市中心的新房子，面积180平米，举行了简单的入宅仪式。',
+    participants: ['张三', '李四', '张小明', '张小红'],
+    location: '阳光花园 3栋 1802',
+    branchId: 'branch-2',
+    photos: [
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20family%20moving%20into%20new%20house%20housewarming%20celebration%20traditional%20rituals&image_size=landscape_4_3',
+    ],
+    createdAt: '2024-12-28T00:00:00Z',
+    updatedAt: '2024-12-28T00:00:00Z',
+  },
+  {
+    id: 'event-4',
+    type: 'birthday',
+    title: '张大山七十大寿',
+    date: '2025-04-10',
+    description: '大伯张大山七十大寿，全家齐聚一堂祝寿，儿孙满堂，其乐融融。',
+    participants: ['张大山', '张三', '李四', '张小明', '张小红', '张大爷'],
+    location: '老家大院',
+    branchId: 'branch-1',
+    photos: [
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20elderly%2070th%20birthday%20celebration%20family%20gathering%20birthday%20cake%20longevity%20noodles&image_size=landscape_16_9',
+    ],
+    createdAt: '2025-04-10T00:00:00Z',
+    updatedAt: '2025-04-10T00:00:00Z',
+  },
+  {
+    id: 'event-5',
+    type: 'graduation',
+    title: '张小红大学毕业',
+    date: '2024-06-30',
+    description: '张小红以优异成绩从名牌大学毕业，获得学士学位，全家为之骄傲。',
+    participants: ['张小红', '张三', '李四', '张小明'],
+    location: '名牌大学 体育馆',
+    branchId: 'branch-2',
+    photos: [
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20university%20graduation%20ceremony%20student%20in%20cap%20and%20gown%20happy%20family&image_size=landscape_4_3',
+    ],
+    createdAt: '2024-06-30T00:00:00Z',
+    updatedAt: '2024-06-30T00:00:00Z',
+  },
+];
+
 export const mockMembers: FamilyMember[] = [
   {
     id: '1',
@@ -283,6 +362,11 @@ export const initializeMockData = (): void => {
   const existingRituals = localStorage.getItem('family_rituals');
   if (!existingRituals || JSON.parse(existingRituals).length === 0) {
     localStorage.setItem('family_rituals', JSON.stringify(mockRituals));
+  }
+
+  const existingEvents = localStorage.getItem('family_events');
+  if (!existingEvents || JSON.parse(existingEvents).length === 0) {
+    localStorage.setItem('family_events', JSON.stringify(mockEvents));
   }
   
   const existingReservations = localStorage.getItem('family_reservations');

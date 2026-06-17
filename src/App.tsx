@@ -18,6 +18,8 @@ import SettingsPage from "@/pages/Settings";
 import Album from "@/pages/Album";
 import CalendarPage from "@/pages/Calendar";
 import AuthPage from "@/pages/Auth";
+import FamilyEventsList from "@/pages/FamilyEvents";
+import FamilyEventForm from "@/pages/FamilyEvents/FamilyEventForm";
 import { useAppStore } from "@/store/useAppStore";
 
 function AppInitializer() {
@@ -94,6 +96,10 @@ export default function App() {
           <Route path="reservations" element={<ReservationsList />} />
           <Route path="reservations/new" element={<ReservationForm mode="create" />} />
           <Route path="reservations/:id/edit" element={<ReservationForm mode="edit" />} />
+          
+          <Route path="family-events" element={<FamilyEventsList />} />
+          <Route path="family-events/new" element={<FamilyEventForm mode="create" />} />
+          <Route path="family-events/:id/edit" element={<FamilyEventForm mode="edit" />} />
           
           <Route path="timeline" element={<RitualTimeline />} />
           

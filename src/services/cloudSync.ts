@@ -11,16 +11,18 @@ import {
   AppSettings,
   CloudDataSnapshot,
   RitualTemplate,
+  FamilyEvent,
 } from '@/types';
 
 type EntityWithTimestamp = { id: string; updatedAt?: string; createdAt?: string };
 
-const ENTITY_TYPES: EntityType[] = ['branches', 'ancestors', 'rituals', 'reservations', 'members', 'templates', 'settings'];
+const ENTITY_TYPES: EntityType[] = ['branches', 'ancestors', 'rituals', 'events', 'reservations', 'members', 'templates', 'settings'];
 
 const UPDATE_TIME_FIELDS: Record<EntityType, string> = {
   branches: 'updatedAt',
   ancestors: 'updatedAt',
   rituals: 'createdAt',
+  events: 'updatedAt',
   reservations: 'updatedAt',
   members: 'createdAt',
   templates: 'updatedAt',
@@ -185,6 +187,7 @@ type LocalDataShape = {
   branches: FamilyBranch[];
   ancestors: Ancestor[];
   rituals: Ritual[];
+  events: FamilyEvent[];
   reservations: RitualReservation[];
   members: FamilyMember[];
   templates: RitualTemplate[];
