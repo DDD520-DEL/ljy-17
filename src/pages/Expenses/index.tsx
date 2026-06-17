@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Plus, Search, Edit3, Calendar, TrendingUp, Wallet, PieChart, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
@@ -24,6 +24,12 @@ export default function ExpensesList() {
   const [selectedRitualId, setSelectedRitualId] = useState<string | 'all'>('all');
   const [viewMode, setViewMode] = useState<'summary' | 'list'>('summary');
   const [expandedRituals, setExpandedRituals] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (globalSearchTerm !== searchTerm) {
+      setSearchTerm(globalSearchTerm);
+    }
+  }, [globalSearchTerm]);
 
   const totalAmount = useMemo(() => {
     return expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -229,7 +235,7 @@ export default function ExpensesList() {
               <input
                 type="text"
                 placeholder="搜索备注、祭祀名称、类别..."
-                value={searchTerm || globalSearchTerm}
+                value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input-field pl-10"
               />
