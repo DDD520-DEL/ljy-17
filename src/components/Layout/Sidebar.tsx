@@ -17,6 +17,7 @@ import {
   MapPin,
   BookOpen,
   BookText,
+  Wallet,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -27,6 +28,7 @@ const navItems = [
   { path: '/memorial-articles', icon: BookText, label: '追思文章' },
   { path: '/reservations', icon: CalendarClock, label: '祭祀预约' },
   { path: '/rituals', icon: CalendarDays, label: '祭祀记录' },
+  { path: '/expenses', icon: Wallet, label: '祭祀花费' },
   { path: '/ritual-templates', icon: FileText, label: '祭祀模板' },
   { path: '/offerings', icon: Package, label: '供品库存' },
   { path: '/locations', icon: MapPin, label: '祭祀地点' },

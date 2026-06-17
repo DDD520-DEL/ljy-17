@@ -163,6 +163,27 @@ export interface RegisterData {
   password: string;
 }
 
+export type ExpenseCategory = 'offering' | 'transport' | 'catering' | 'other';
+
+export const EXPENSE_CATEGORY_META: Record<ExpenseCategory, { label: string; icon: string; color: string; bgColor: string }> = {
+  offering: { label: '供品', icon: '🎁', color: 'text-amber-700', bgColor: 'bg-amber-50' },
+  transport: { label: '交通', icon: '🚗', color: 'text-blue-700', bgColor: 'bg-blue-50' },
+  catering: { label: '餐饮', icon: '🍱', color: 'text-emerald-700', bgColor: 'bg-emerald-50' },
+  other: { label: '其他', icon: '📦', color: 'text-gray-700', bgColor: 'bg-gray-50' },
+};
+
+export interface RitualExpense {
+  id: string;
+  ritualId: string;
+  ritualName?: string;
+  amount: number;
+  category: ExpenseCategory;
+  date: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error' | 'conflict';
 
 export interface SyncState {
@@ -235,7 +256,7 @@ export interface MemorialArticle {
   updatedAt: string;
 }
 
-export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings' | 'locations' | 'rules' | 'articles';
+export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings' | 'locations' | 'rules' | 'articles' | 'expenses';
 
 export interface ConflictItem {
   entityType: EntityType;
@@ -267,6 +288,7 @@ export interface CloudDataSnapshot {
   locations: MemorialLocation[];
   rules: FamilyRule[];
   articles: MemorialArticle[];
+  expenses: RitualExpense[];
   settings: AppSettings;
   snapshotAt: string;
   version: number;

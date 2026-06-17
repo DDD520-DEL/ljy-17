@@ -13,6 +13,7 @@ import {
   MemorialLocation,
   FamilyRule,
   MemorialArticle,
+  RitualExpense,
 } from '@/types';
 import { authService } from './authService';
 
@@ -61,6 +62,7 @@ export const syncService = {
     locations: MemorialLocation[];
     rules: FamilyRule[];
     articles: MemorialArticle[];
+    expenses: RitualExpense[];
     settings: AppSettings;
   }): Promise<{ success: boolean; snapshot?: CloudDataSnapshot; error?: string }> {
     await delay(700);
@@ -84,6 +86,7 @@ export const syncService = {
         locations: data.locations,
         rules: data.rules,
         articles: data.articles,
+        expenses: data.expenses,
         settings: data.settings,
         snapshotAt: new Date().toISOString(),
         version: getNextVersion(auth.userId),
@@ -124,6 +127,7 @@ export const syncService = {
     locations: MemorialLocation[];
     rules: FamilyRule[];
     articles: MemorialArticle[];
+    expenses: RitualExpense[];
     settings: AppSettings;
   }): Promise<SyncResult> {
     await delay(1000);
@@ -150,6 +154,7 @@ export const syncService = {
           locations: data.locations,
           rules: data.rules,
           articles: data.articles,
+          expenses: data.expenses,
           settings: data.settings,
           snapshotAt: new Date().toISOString(),
           version: getNextVersion(auth.userId),
@@ -158,7 +163,7 @@ export const syncService = {
         return {
           success: true,
           syncedAt: newSnapshot.snapshotAt,
-          changesApplied: { local: 0, remote: data.branches.length + data.ancestors.length + data.rituals.length + data.events.length + data.reservations.length + data.members.length + data.templates.length + data.offerings.length + data.locations.length + data.rules.length + data.articles.length },
+          changesApplied: { local: 0, remote: data.branches.length + data.ancestors.length + data.rituals.length + data.events.length + data.reservations.length + data.members.length + data.templates.length + data.offerings.length + data.locations.length + data.rules.length + data.articles.length + data.expenses.length },
         };
       }
 
@@ -184,6 +189,7 @@ export const syncService = {
     locations: MemorialLocation[];
     rules: FamilyRule[];
     articles: MemorialArticle[];
+    expenses: RitualExpense[];
     settings: AppSettings;
   }): Promise<{ success: boolean; snapshot?: CloudDataSnapshot; error?: string }> {
     return this.uploadSnapshot(data);

@@ -26,6 +26,8 @@ import FamilyRulesList from "@/pages/FamilyRules";
 import FamilyRuleForm from "@/pages/FamilyRules/FamilyRuleForm";
 import MemorialArticlesList from "@/pages/MemorialArticles";
 import MemorialArticleForm from "@/pages/MemorialArticles/MemorialArticleForm";
+import ExpensesList from "@/pages/Expenses";
+import ExpenseForm from "@/pages/Expenses/ExpenseForm";
 import { useAppStore } from "@/store/useAppStore";
 
 function AppInitializer() {
@@ -94,6 +96,10 @@ export default function App() {
           <Route path="rituals" element={<RitualsList />} />
           <Route path="rituals/new" element={<RitualForm mode="create" />} />
           <Route path="rituals/:id/edit" element={<RitualForm mode="edit" />} />
+          
+          <Route path="expenses" element={<ExpensesList />} />
+          <Route path="expenses/new" element={<ExpenseForm mode="create" />} />
+          <Route path="expenses/:id/edit" element={<ExpenseForm mode="edit" />} />
           
           <Route path="ritual-templates" element={<RitualTemplatesList />} />
           <Route path="ritual-templates/new" element={<TemplateForm mode="create" />} />

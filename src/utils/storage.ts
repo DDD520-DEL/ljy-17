@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation, FamilyRule, MemorialArticle } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation, FamilyRule, MemorialArticle, RitualExpense } from '@/types';
 import { changeTracker } from '@/services/changeTracker';
 
 const STORAGE_KEYS = {
@@ -13,6 +13,7 @@ const STORAGE_KEYS = {
   LOCATIONS: 'memorial_locations',
   RULES: 'family_rules',
   ARTICLES: 'memorial_articles',
+  EXPENSES: 'ritual_expenses',
   SETTINGS: 'family_settings',
 };
 
@@ -598,6 +599,52 @@ export const storage = {
     return true;
   },
 
+  getExpenses(): RitualExpense[] {
+    const data = localStorage.getItem(STORAGE_KEYS.EXPENSES);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setExpenses(expenses: RitualExpense[]): void {
+    localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
+  },
+
+  addExpense(expense: Omit<RitualExpense, 'id' | 'createdAt' | 'updatedAt'>): RitualExpense {
+    const expenses = this.getExpenses();
+    const newExpense: RitualExpense = {
+      ...expense,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    expenses.push(newExpense);
+    this.setExpenses(expenses);
+    changeTracker.recordChange('expenses', newExpense.id, 'create');
+    return newExpense;
+  },
+
+  updateExpense(id: string, data: Partial<RitualExpense>): RitualExpense | null {
+    const expenses = this.getExpenses();
+    const index = expenses.findIndex(e => e.id === id);
+    if (index === -1) return null;
+    expenses[index] = {
+      ...expenses[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setExpenses(expenses);
+    changeTracker.recordChange('expenses', id, 'update');
+    return expenses[index];
+  },
+
+  deleteExpense(id: string): boolean {
+    const expenses = this.getExpenses();
+    const filtered = expenses.filter(e => e.id !== id);
+    if (filtered.length === expenses.length) return false;
+    this.setExpenses(filtered);
+    changeTracker.recordChange('expenses', id, 'delete');
+    return true;
+  },
+
   exportData(): string {
     const data = {
       branches: this.getBranches(),
@@ -611,6 +658,7 @@ export const storage = {
       locations: this.getLocations(),
       rules: this.getRules(),
       articles: this.getArticles(),
+      expenses: this.getExpenses(),
       settings: this.getSettings(),
       exportedAt: new Date().toISOString(),
     };
@@ -631,6 +679,7 @@ export const storage = {
       if (data.locations) this.setLocations(data.locations);
       if (data.rules) this.setRules(data.rules);
       if (data.articles) this.setArticles(data.articles);
+      if (data.expenses) this.setExpenses(data.expenses);
       if (data.settings) this.updateSettings(data.settings);
       return true;
     } catch {
@@ -650,6 +699,7 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.LOCATIONS);
     localStorage.removeItem(STORAGE_KEYS.RULES);
     localStorage.removeItem(STORAGE_KEYS.ARTICLES);
+    localStorage.removeItem(STORAGE_KEYS.EXPENSES);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
   },
 };
