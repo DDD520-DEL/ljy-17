@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation, FamilyRule, MemorialArticle, RitualExpense } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation, FamilyRule, MemorialArticle, RitualExpense, OfferingWiki } from '@/types';
 import { changeTracker } from '@/services/changeTracker';
 
 const STORAGE_KEYS = {
@@ -14,6 +14,7 @@ const STORAGE_KEYS = {
   RULES: 'family_rules',
   ARTICLES: 'memorial_articles',
   EXPENSES: 'ritual_expenses',
+  WIKI: 'offering_wiki',
   SETTINGS: 'family_settings',
 };
 
@@ -645,6 +646,52 @@ export const storage = {
     return true;
   },
 
+  getWiki(): OfferingWiki[] {
+    const data = localStorage.getItem(STORAGE_KEYS.WIKI);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setWiki(wiki: OfferingWiki[]): void {
+    localStorage.setItem(STORAGE_KEYS.WIKI, JSON.stringify(wiki));
+  },
+
+  addWiki(wiki: Omit<OfferingWiki, 'id' | 'createdAt' | 'updatedAt'>): OfferingWiki {
+    const wikiList = this.getWiki();
+    const newWiki: OfferingWiki = {
+      ...wiki,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    wikiList.push(newWiki);
+    this.setWiki(wikiList);
+    changeTracker.recordChange('wiki', newWiki.id, 'create');
+    return newWiki;
+  },
+
+  updateWiki(id: string, data: Partial<OfferingWiki>): OfferingWiki | null {
+    const wikiList = this.getWiki();
+    const index = wikiList.findIndex(w => w.id === id);
+    if (index === -1) return null;
+    wikiList[index] = {
+      ...wikiList[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setWiki(wikiList);
+    changeTracker.recordChange('wiki', id, 'update');
+    return wikiList[index];
+  },
+
+  deleteWiki(id: string): boolean {
+    const wikiList = this.getWiki();
+    const filtered = wikiList.filter(w => w.id !== id);
+    if (filtered.length === wikiList.length) return false;
+    this.setWiki(filtered);
+    changeTracker.recordChange('wiki', id, 'delete');
+    return true;
+  },
+
   exportData(): string {
     const data = {
       branches: this.getBranches(),
@@ -659,6 +706,7 @@ export const storage = {
       rules: this.getRules(),
       articles: this.getArticles(),
       expenses: this.getExpenses(),
+      wiki: this.getWiki(),
       settings: this.getSettings(),
       exportedAt: new Date().toISOString(),
     };
@@ -680,6 +728,7 @@ export const storage = {
       if (data.rules) this.setRules(data.rules);
       if (data.articles) this.setArticles(data.articles);
       if (data.expenses) this.setExpenses(data.expenses);
+      if (data.wiki) this.setWiki(data.wiki);
       if (data.settings) this.updateSettings(data.settings);
       return true;
     } catch {
@@ -700,6 +749,7 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.RULES);
     localStorage.removeItem(STORAGE_KEYS.ARTICLES);
     localStorage.removeItem(STORAGE_KEYS.EXPENSES);
+    localStorage.removeItem(STORAGE_KEYS.WIKI);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
   },
 };

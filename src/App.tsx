@@ -28,6 +28,7 @@ import MemorialArticlesList from "@/pages/MemorialArticles";
 import MemorialArticleForm from "@/pages/MemorialArticles/MemorialArticleForm";
 import ExpensesList from "@/pages/Expenses";
 import ExpenseForm from "@/pages/Expenses/ExpenseForm";
+import OfferingWikiPage from "@/pages/OfferingWiki";
 import { useAppStore } from "@/store/useAppStore";
 
 function AppInitializer() {
@@ -120,6 +121,7 @@ export default function App() {
           <Route path="members" element={<MembersList />} />
           
           <Route path="offerings" element={<OfferingsPage />} />
+          <Route path="offering-wiki" element={<OfferingWikiPage />} />
           <Route path="locations" element={<LocationsPage />} />
           
           <Route path="family-rules" element={<FamilyRulesList />} />

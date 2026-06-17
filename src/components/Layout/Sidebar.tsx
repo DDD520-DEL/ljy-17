@@ -18,6 +18,7 @@ import {
   BookOpen,
   BookText,
   Wallet,
+  Library,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -31,6 +32,7 @@ const navItems = [
   { path: '/expenses', icon: Wallet, label: '祭祀花费' },
   { path: '/ritual-templates', icon: FileText, label: '祭祀模板' },
   { path: '/offerings', icon: Package, label: '供品库存' },
+  { path: '/offering-wiki', icon: Library, label: '供品百科' },
   { path: '/locations', icon: MapPin, label: '祭祀地点' },
   { path: '/family-events', icon: Sparkles, label: '家族大事记' },
   { path: '/album', icon: Camera, label: '家族相册' },

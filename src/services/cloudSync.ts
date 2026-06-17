@@ -17,11 +17,12 @@ import {
   FamilyRule,
   MemorialArticle,
   RitualExpense,
+  OfferingWiki,
 } from '@/types';
 
 type EntityWithTimestamp = { id: string; updatedAt?: string; createdAt?: string };
 
-const ENTITY_TYPES: EntityType[] = ['branches', 'ancestors', 'rituals', 'events', 'reservations', 'members', 'templates', 'offerings', 'locations', 'rules', 'articles', 'expenses', 'settings'];
+const ENTITY_TYPES: EntityType[] = ['branches', 'ancestors', 'rituals', 'events', 'reservations', 'members', 'templates', 'offerings', 'locations', 'rules', 'articles', 'expenses', 'wiki', 'settings'];
 
 const UPDATE_TIME_FIELDS: Record<EntityType, string> = {
   branches: 'updatedAt',
@@ -36,6 +37,7 @@ const UPDATE_TIME_FIELDS: Record<EntityType, string> = {
   rules: 'updatedAt',
   articles: 'updatedAt',
   expenses: 'updatedAt',
+  wiki: 'updatedAt',
   settings: 'updatedAt',
 };
 
@@ -85,8 +87,8 @@ export const conflictDetector = {
         continue;
       }
 
-      const localEntities = (localData as unknown as Record<string, EntityWithTimestamp[]>)[entityType];
-      const remoteEntities = (remoteSnapshot as unknown as Record<string, EntityWithTimestamp[]>)[entityType];
+      const localEntities = (localData as unknown as Record<string, EntityWithTimestamp[]>)[entityType] || [];
+      const remoteEntities = (remoteSnapshot as unknown as Record<string, EntityWithTimestamp[]>)[entityType] || [];
 
       const remoteMap = new Map(remoteEntities.map(e => [e.id, e]));
 
@@ -206,6 +208,7 @@ type LocalDataShape = {
   rules: FamilyRule[];
   articles: MemorialArticle[];
   expenses: RitualExpense[];
+  wiki: OfferingWiki[];
   settings: AppSettings;
 };
 
@@ -234,8 +237,8 @@ export const mergeEngine = {
         continue;
       }
 
-      const localEntities = (localData as unknown as Record<string, EntityWithTimestamp[]>)[entityType];
-      const remoteEntities = (remoteSnapshot as unknown as Record<string, EntityWithTimestamp[]>)[entityType];
+      const localEntities = (localData as unknown as Record<string, EntityWithTimestamp[]>)[entityType] || [];
+      const remoteEntities = (remoteSnapshot as unknown as Record<string, EntityWithTimestamp[]>)[entityType] || [];
       const resolvedForType = resolvedConflicts.get(entityType);
 
       const localMap = new Map(localEntities.map(e => [e.id, { ...e }]));

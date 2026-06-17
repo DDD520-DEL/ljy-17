@@ -33,6 +33,7 @@ const ENTITY_NAMES: Record<EntityType, string> = {
   rules: '家训家规',
   articles: '追思文章',
   expenses: '祭祀花费',
+  wiki: '供品百科',
 };
 
 export default function ConflictResolverDialog({

@@ -20,6 +20,7 @@ import {
   FamilyRule,
   MemorialArticle,
   RitualExpense,
+  OfferingWiki,
 } from '@/types';
 import { storage } from '@/utils/storage';
 import { getReminders } from '@/utils/dateUtils';
@@ -42,6 +43,7 @@ interface AppState {
   rules: FamilyRule[];
   articles: MemorialArticle[];
   expenses: RitualExpense[];
+  wiki: OfferingWiki[];
   settings: AppSettings;
   reminders: ReminderItem[];
   isInitialized: boolean;
@@ -107,6 +109,10 @@ interface AppState {
   updateExpense: (id: string, data: Partial<RitualExpense>) => RitualExpense | null;
   deleteExpense: (id: string) => boolean;
 
+  addWiki: (wiki: Omit<OfferingWiki, 'id' | 'createdAt' | 'updatedAt'>) => OfferingWiki;
+  updateWiki: (id: string, data: Partial<OfferingWiki>) => OfferingWiki | null;
+  deleteWiki: (id: string) => boolean;
+
   updateSettings: (settings: Partial<AppSettings>) => AppSettings;
 
   exportData: () => string;
@@ -140,6 +146,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   rules: [],
   articles: [],
   expenses: [],
+  wiki: [],
   settings: {
     reminderDays: 7,
     theme: 'light',
@@ -182,6 +189,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const rules = storage.getRules();
     const articles = storage.getArticles();
     const expenses = storage.getExpenses();
+    const wiki = storage.getWiki();
     const settings = storage.getSettings();
     
     const reminders = getReminders(ancestors, settings.reminderDays, reservations);
@@ -199,6 +207,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       rules,
       articles,
       expenses,
+      wiki,
       settings,
       reminders,
       isInitialized: true,
@@ -586,6 +595,31 @@ export const useAppStore = create<AppState>((set, get) => ({
     return success;
   },
 
+  addWiki: (wiki) => {
+    const newWiki = storage.addWiki(wiki);
+    const wikiList = storage.getWiki();
+    set({ wiki: wikiList });
+    return newWiki;
+  },
+
+  updateWiki: (id, data) => {
+    const updated = storage.updateWiki(id, data);
+    if (updated) {
+      const wikiList = storage.getWiki();
+      set({ wiki: wikiList });
+    }
+    return updated;
+  },
+
+  deleteWiki: (id) => {
+    const success = storage.deleteWiki(id);
+    if (success) {
+      const wikiList = storage.getWiki();
+      set({ wiki: wikiList });
+    }
+    return success;
+  },
+
   deleteRitual: (id) => {
     const success = storage.deleteRitual(id);
     if (success) {
@@ -624,9 +658,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       const rules = storage.getRules();
       const articles = storage.getArticles();
       const expenses = storage.getExpenses();
+      const wiki = storage.getWiki();
       const settings = storage.getSettings();
       const reminders = getReminders(ancestors, settings.reminderDays, reservations);
-      set({ branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, settings, reminders });
+      set({ branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, wiki, settings, reminders });
     }
     return success;
   },
@@ -647,6 +682,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       rules: [],
       articles: [],
       expenses: [],
+      wiki: [],
       settings: {
         reminderDays: 7,
         theme: 'light',
@@ -736,10 +772,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     set(state => ({ syncState: { ...state.syncState, status: 'syncing', lastSyncError: null } }));
 
     try {
-      const { branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, settings } = get();
+      const { branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, wiki, settings } = get();
 
       const result = await syncOrchestrator.performSync(
-        { branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, settings },
+        { branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, wiki, settings },
         onConflict
       );
 
@@ -770,6 +806,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         storage.setRules(result.mergedData.rules || []);
         storage.setArticles(result.mergedData.articles || []);
         storage.setExpenses(result.mergedData.expenses || []);
+        storage.setWiki(result.mergedData.wiki || []);
         storage.updateSettings(result.mergedData.settings);
 
         const reminders = getReminders(result.mergedData.ancestors, result.mergedData.settings.reminderDays, result.mergedData.reservations);
@@ -787,6 +824,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           rules: result.mergedData.rules || [],
           articles: result.mergedData.articles || [],
           expenses: result.mergedData.expenses || [],
+          wiki: result.mergedData.wiki || [],
           settings: result.mergedData.settings,
           reminders,
         });
@@ -805,6 +843,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         rules: get().rules,
         articles: get().articles,
         expenses: get().expenses,
+        wiki: get().wiki,
         settings: get().settings,
       });
 
@@ -852,8 +891,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set(state => ({ syncState: { ...state.syncState, status: 'syncing', lastSyncError: null } }));
 
     try {
-      const { branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, settings } = get();
-      const result = await syncService.forceUpload({ branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, settings });
+      const { branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, wiki, settings } = get();
+      const result = await syncService.forceUpload({ branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, wiki, settings });
 
       if (!result.success) {
         set(state => ({
@@ -921,6 +960,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         storage.setRules(result.snapshot.rules || []);
         storage.setArticles(result.snapshot.articles || []);
         storage.setExpenses(result.snapshot.expenses || []);
+        storage.setWiki(result.snapshot.wiki || []);
         storage.updateSettings(result.snapshot.settings);
 
         const reminders = getReminders(result.snapshot.ancestors, result.snapshot.settings.reminderDays, result.snapshot.reservations);
@@ -938,6 +978,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           rules: result.snapshot.rules || [],
           articles: result.snapshot.articles || [],
           expenses: result.snapshot.expenses || [],
+          wiki: result.snapshot.wiki || [],
           settings: result.snapshot.settings,
           reminders,
         });
@@ -979,10 +1020,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const resolvedMap = conflictResolver.resolveAllConflicts(pendingConflicts, 'merge', resolutions);
 
-      const { branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, settings } = get();
+      const { branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, wiki, settings } = get();
       const { mergeEngine } = await import('@/services/cloudSync');
       const mergeResult = mergeEngine.mergeLocalAndRemote(
-        { branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, settings },
+        { branches, ancestors, rituals, events, reservations, members, templates, offerings, locations, rules, articles, expenses, wiki, settings },
         undefined,
         resolvedMap
       );
@@ -1001,6 +1042,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       storage.setRules(mergedData.rules || []);
       storage.setArticles(mergedData.articles || []);
       storage.setExpenses(mergedData.expenses || []);
+      storage.setWiki(mergedData.wiki || []);
       storage.updateSettings(mergedData.settings);
 
       const reminders = getReminders(mergedData.ancestors, mergedData.settings.reminderDays, mergedData.reservations);
@@ -1018,6 +1060,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         rules: mergedData.rules || [],
         articles: mergedData.articles || [],
         expenses: mergedData.expenses || [],
+        wiki: mergedData.wiki || [],
         settings: mergedData.settings,
       });
 
@@ -1043,6 +1086,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         rules: mergedData.rules || [],
         articles: mergedData.articles || [],
         expenses: mergedData.expenses || [],
+        wiki: mergedData.wiki || [],
         settings: mergedData.settings,
         reminders,
         pendingConflicts: null,

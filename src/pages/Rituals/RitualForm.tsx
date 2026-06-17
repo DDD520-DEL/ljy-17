@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, Plus, X, ImagePlus, FileText, Check, AlertTriangle, Package, MapPin } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus, X, ImagePlus, FileText, Check, AlertTriangle, Package, MapPin, BookOpen } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Ritual, RitualTemplate, OfferingItem } from '@/types';
+import OfferingWikiPicker from '@/components/OfferingWikiPicker';
 
 interface RitualFormProps {
   mode: 'create' | 'edit';
@@ -21,6 +22,7 @@ export default function RitualForm({ mode }: RitualFormProps) {
   const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null);
   const [showStockDeductionInfo, setShowStockDeductionInfo] = useState(false);
   const [stockDeductionItems, setStockDeductionItems] = useState<{ name: string; before: number; after: number; unit: string }[]>([]);
+  const [showWikiPicker, setShowWikiPicker] = useState(false);
   
   const [formData, setFormData] = useState<Partial<Ritual>>({
     ancestorId: preselectedAncestorId || '',
@@ -141,6 +143,15 @@ export default function RitualForm({ mode }: RitualFormProps) {
       ...prev,
       offerings: prev.offerings?.filter(o => o !== item) || []
     }));
+  };
+
+  const handleWikiSelect = (name: string) => {
+    if (!formData.offerings?.includes(name)) {
+      setFormData(prev => ({
+        ...prev,
+        offerings: [...(prev.offerings || []), name]
+      }));
+    }
   };
 
   const getOfferingStockInfo = (offeringName: string): { item?: OfferingItem; isLow: boolean; isOutOfStock: boolean } => {
@@ -486,9 +497,19 @@ export default function RitualForm({ mode }: RitualFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-brown-700 mb-2">
-            供品
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-brown-700">
+              供品
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowWikiPicker(true)}
+              className="text-xs text-gold-600 hover:text-gold-700 flex items-center gap-1"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              供品百科参考
+            </button>
+          </div>
           <div className="flex gap-2 mb-3">
             <input
               type="text"
@@ -783,6 +804,13 @@ export default function RitualForm({ mode }: RitualFormProps) {
           </div>
         </div>
       )}
+
+      <OfferingWikiPicker
+        open={showWikiPicker}
+        onClose={() => setShowWikiPicker(false)}
+        onSelect={handleWikiSelect}
+        selectedOfferings={formData.offerings || []}
+      />
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, Plus, X, Calendar, MapPin } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus, X, Calendar, MapPin, BookOpen } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { RitualReservation } from '@/types';
 import { formatDate, getLunarCalendar } from '@/utils/dateUtils';
+import OfferingWikiPicker from '@/components/OfferingWikiPicker';
 
 interface ReservationFormProps {
   mode: 'create' | 'edit';
@@ -31,6 +32,7 @@ export default function ReservationForm({ mode }: ReservationFormProps) {
   const [newParticipant, setNewParticipant] = useState('');
   const [newOffering, setNewOffering] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showWikiPicker, setShowWikiPicker] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -129,6 +131,15 @@ export default function ReservationForm({ mode }: ReservationFormProps) {
       ...prev,
       offerings: prev.offerings?.filter(o => o !== item) || []
     }));
+  };
+
+  const handleWikiSelect = (name: string) => {
+    if (!formData.offerings?.includes(name)) {
+      setFormData(prev => ({
+        ...prev,
+        offerings: [...(prev.offerings || []), name]
+      }));
+    }
   };
 
   const getMinDate = () => {
@@ -316,9 +327,19 @@ export default function ReservationForm({ mode }: ReservationFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-brown-700 mb-2">
-            供品清单
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-brown-700">
+              供品清单
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowWikiPicker(true)}
+              className="text-xs text-gold-600 hover:text-gold-700 flex items-center gap-1"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              供品百科参考
+            </button>
+          </div>
           <div className="flex gap-2 mb-3">
             <input
               type="text"
@@ -452,6 +473,13 @@ export default function ReservationForm({ mode }: ReservationFormProps) {
           </div>
         </div>
       )}
+
+      <OfferingWikiPicker
+        open={showWikiPicker}
+        onClose={() => setShowWikiPicker(false)}
+        onSelect={handleWikiSelect}
+        selectedOfferings={formData.offerings || []}
+      />
     </div>
   );
 }

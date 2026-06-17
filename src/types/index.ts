@@ -95,6 +95,59 @@ export interface OfferingItem {
   updatedAt: string;
 }
 
+export const OFFERING_WIKI_CATEGORIES = [
+  '三牲',
+  '五果',
+  '酒水茶',
+  '香烛',
+  '纸扎祭品',
+  '糕点糖果',
+  '鲜花',
+  '其他',
+] as const;
+
+export type OfferingWikiCategory = (typeof OFFERING_WIKI_CATEGORIES)[number];
+
+export const OFFERING_WIKI_CATEGORY_META: Record<
+  OfferingWikiCategory,
+  { label: string; icon: string; color: string; bgColor: string }
+> = {
+  三牲: { label: '三牲', icon: '🍖', color: 'text-red-700', bgColor: 'bg-red-50' },
+  五果: { label: '五果', icon: '🍎', color: 'text-green-700', bgColor: 'bg-green-50' },
+  酒水茶: { label: '酒水茶', icon: '🍶', color: 'text-amber-700', bgColor: 'bg-amber-50' },
+  香烛: { label: '香烛', icon: '🕯️', color: 'text-orange-700', bgColor: 'bg-orange-50' },
+  纸扎祭品: { label: '纸扎祭品', icon: '🪔', color: 'text-yellow-700', bgColor: 'bg-yellow-50' },
+  糕点糖果: { label: '糕点糖果', icon: '🥮', color: 'text-pink-700', bgColor: 'bg-pink-50' },
+  鲜花: { label: '鲜花', icon: '🌼', color: 'text-purple-700', bgColor: 'bg-purple-50' },
+  其他: { label: '其他', icon: '📦', color: 'text-gray-700', bgColor: 'bg-gray-50' },
+};
+
+export const OFFERING_OCCASIONS = [
+  '清明',
+  '忌日',
+  '中元节',
+  '春节',
+  '冬至',
+  '周年',
+  '诞辰',
+  '寒衣节',
+  '重阳节',
+  '日常祭拜',
+] as const;
+
+export interface OfferingWiki {
+  id: string;
+  name: string;
+  category: string;
+  image?: string;
+  meaning: string;
+  occasions: string[];
+  description?: string;
+  usageNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppSettings {
   reminderDays: number;
   theme: 'light' | 'dark';
@@ -256,7 +309,7 @@ export interface MemorialArticle {
   updatedAt: string;
 }
 
-export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings' | 'locations' | 'rules' | 'articles' | 'expenses';
+export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings' | 'locations' | 'rules' | 'articles' | 'expenses' | 'wiki';
 
 export interface ConflictItem {
   entityType: EntityType;
@@ -289,6 +342,7 @@ export interface CloudDataSnapshot {
   rules: FamilyRule[];
   articles: MemorialArticle[];
   expenses: RitualExpense[];
+  wiki: OfferingWiki[];
   settings: AppSettings;
   snapshotAt: string;
   version: number;

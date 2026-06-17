@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch, FamilyEvent, OfferingItem, FamilyRule, MemorialArticle } from '@/types';
+import { Ancestor, Ritual, FamilyMember, RitualReservation, FamilyBranch, FamilyEvent, OfferingItem, FamilyRule, MemorialArticle, OfferingWiki } from '@/types';
 
 const getFutureDate = (daysFromNow: number): string => {
   const date = new Date();
@@ -573,6 +573,153 @@ export const mockArticles: MemorialArticle[] = [
   },
 ];
 
+export const mockWiki: OfferingWiki[] = [
+  {
+    id: 'wiki-1',
+    name: '三牲',
+    category: '三牲',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20traditional%20three%20sacrificial%20meats%20offering%20pork%20chicken%20fish%20arranged%20on%20ceremonial%20red%20plate%20ancestral%20worship&image_size=square',
+    meaning: '三牲指猪、鸡、鱼三种牲礼，是祭祀中最为隆重的供品组合，象征对先人的至高敬意与丰厚的奉养之心。',
+    occasions: ['春节', '忌日', '周年', '诞辰', '中元节'],
+    description: '传统三牲多以整鸡、方块猪肉、全鱼摆盘，讲究“有头有尾、完整无缺”，寓意家族圆满、子孙绵延。',
+    usageNotes: '摆放时鸡头朝向先人牌位或墓碑；鱼多取“余”之谐音，寓意年年有余。三牲适用于大祭，日常小祭不宜过度铺张。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-2',
+    name: '五果',
+    category: '五果',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20traditional%20five%20fruits%20offering%20platter%20apples%20bananas%20oranges%20grapes%20persimmon%20ancestral%20worship%20ceremony&image_size=square',
+    meaning: '五果取五种时令水果，象征“五福临门”，寓意福、禄、寿、喜、财齐聚，是寄托美好祝愿的吉祥供品。',
+    occasions: ['春节', '清明', '忌日', '诞辰', '重阳节'],
+    description: '五果多以苹果（平安）、橘子（吉利）、香蕉（招财）、葡萄、柿子等组成，色泽鲜艳、寓意吉祥。',
+    usageNotes: '宜选新鲜完整的水果，忌用破损或腐烂者。梨因谐音“离”，部分地区忌讳用于祭祀。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-3',
+    name: '水果',
+    category: '五果',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Fresh%20fruit%20platter%20offering%20apples%20oranges%20bananas%20for%20Chinese%20ancestral%20worship%20ceremony&image_size=square',
+    meaning: '水果色泽鲜艳、清甜可口，象征丰收与生机，是表达敬意与追思的常见供品。',
+    occasions: ['清明', '忌日', '日常祭拜', '周年'],
+    description: '可随季节选用新鲜水果，单数或双数皆可，以新鲜洁净为要。',
+    usageNotes: '祭毕可分与家人食用，寓意分享先人福泽。祭前宜清洗擦净，以示诚敬。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-4',
+    name: '糕点',
+    category: '糕点糖果',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Traditional%20Chinese%20pastries%20and%20cakes%20offering%20plate%20memorial%20ceremony%20red%20box&image_size=square',
+    meaning: '糕点取“高”之谐音，寓意步步高升、生活甜美，寄托对家族兴旺的美好期盼。',
+    occasions: ['春节', '忌日', '诞辰', '日常祭拜'],
+    description: '传统糕点如桃酥、绿豆糕、云片糕等，造型精致、寓意吉祥。',
+    usageNotes: '宜选用寓意吉祥的糕点，避免过于辛辣或刺激性口味。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-5',
+    name: '糖果',
+    category: '糕点糖果',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Assorted%20Chinese%20candies%20offering%20plate%20memorial%20ceremony%20festive&image_size=square',
+    meaning: '糖果象征甜蜜美满，寓意先人在天之灵庇佑子孙生活甜蜜、家运昌隆。',
+    occasions: ['春节', '诞辰', '日常祭拜'],
+    description: '多以各式喜糖、糖莲子、糖莲藕等摆盘，色泽喜庆。',
+    usageNotes: '适合节庆祭拜，忌日等庄重场合可酌情减少。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-6',
+    name: '年糕',
+    category: '糕点糖果',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20new%20year%20rice%20cake%20niangao%20offering%20plate%20ceremonial&image_size=square',
+    meaning: '年糕谐音“年高”，寓意年年高升、岁岁登高，是春节祭祀不可或缺的供品。',
+    occasions: ['春节'],
+    description: '以糯米制成，有红、白、黄等色，象征金银丰收。',
+    usageNotes: '春节期间必备，可切片煎食后分与家人，寓意分享福气。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-7',
+    name: '白酒',
+    category: '酒水茶',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20baijiu%20liquor%20bottle%20and%20small%20cup%20offering%20ancestral%20worship%20ceremony&image_size=square',
+    meaning: '白酒清冽醇厚，以酒敬先人，表达虔诚敬意与追思之情，是祭礼中敬献的重要环节。',
+    occasions: ['清明', '忌日', '春节', '周年', '中元节'],
+    description: '通常斟三杯，象征“天、地、人”三才，或取“三叩九首”之敬意。',
+    usageNotes: '斟酒宜满，以示诚意。祭毕可洒于墓前或地上，寓意敬献先人。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-8',
+    name: '清茶',
+    category: '酒水茶',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20tea%20cups%20with%20green%20tea%20offering%20ancestral%20worship%20ceremony%20elegant&image_size=square',
+    meaning: '清茶素净淡雅，象征清正廉洁、淡泊明志，以茶敬先人寓意子孙清白做人、福泽绵长。',
+    occasions: ['清明', '忌日', '日常祭拜', '周年'],
+    description: '多以三杯清茶奉于供桌，茶香袅袅，寄托哀思。',
+    usageNotes: '宜用新泡热茶，忌用隔夜冷茶。茶水七分满，留三分情。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-9',
+    name: '香烛',
+    category: '香烛',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20incense%20sticks%20and%20red%20candles%20burning%20ancestral%20worship%20altar%20ceremonial&image_size=square',
+    meaning: '香烛为沟通人神、传达心意的媒介。烛光照亮幽冥之路，香烟袅袅传递子孙思念。',
+    occasions: ['清明', '忌日', '春节', '中元节', '寒衣节', '周年'],
+    description: '由香与红烛组成，香多为三炷，烛为一对，象征光明与指引。',
+    usageNotes: '点燃后应让其自然燃尽，勿中途吹灭。祭毕注意防火安全，确认熄灭后方可离开。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-10',
+    name: '纸钱',
+    category: '纸扎祭品',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20joss%20paper%20spirit%20money%20offering%20stack%20ancestral%20worship&image_size=square',
+    meaning: '纸钱又称冥币，焚化后供先人在冥府使用，是寄托哀思、奉养先人阴间所需的传统方式。',
+    occasions: ['清明', '忌日', '中元节', '寒衣节', '周年'],
+    description: '多为黄色或白色纸张，印有冥币图案，代表阴间通货。',
+    usageNotes: '焚化时宜在指定区域进行，注意防火与环保。焚毕应确认余烬完全熄灭。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-11',
+    name: '元宝纸',
+    category: '纸扎祭品',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20gold%20ingot%20paper%20offering%20joss%20yuanbao%20folded%20ancestral%20worship&image_size=square',
+    meaning: '元宝纸折成金锭银锭之形，焚化后寓意为先人奉上金银财宝，祈愿先人在天之灵富足安乐、庇佑家宅兴旺。',
+    occasions: ['清明', '中元节', '寒衣节', '忌日', '周年'],
+    description: '以金纸或银纸折叠成元宝形状，成串摆放，色泽华贵。',
+    usageNotes: '可与纸钱一同焚化。折元宝宜心怀敬意，数量以双数为吉。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'wiki-12',
+    name: '鲜花',
+    category: '鲜花',
+    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=White%20and%20yellow%20chrysanthemum%20flowers%20bouquet%20memorial%20offering%20cemetery&image_size=square',
+    meaning: '鲜花以菊花为最，象征高洁与怀念，寄托对先人永恒的追思与敬意。',
+    occasions: ['清明', '忌日', '周年', '重阳节'],
+    description: '多以白菊、黄菊为主，亦可用先人生前喜爱的花种，素雅庄重。',
+    usageNotes: '忌用过于鲜艳喜庆的花卉（如红玫瑰）。菊花宜单数，色彩以素净为宜。',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+];
+
 export const initializeMockData = (): void => {
   const existingBranches = localStorage.getItem('family_branches');
   if (!existingBranches || JSON.parse(existingBranches).length === 0) {
@@ -617,5 +764,10 @@ export const initializeMockData = (): void => {
   const existingArticles = localStorage.getItem('memorial_articles');
   if (!existingArticles || JSON.parse(existingArticles).length === 0) {
     localStorage.setItem('memorial_articles', JSON.stringify(mockArticles));
+  }
+
+  const existingWiki = localStorage.getItem('offering_wiki');
+  if (!existingWiki || JSON.parse(existingWiki).length === 0) {
+    localStorage.setItem('offering_wiki', JSON.stringify(mockWiki));
   }
 };
