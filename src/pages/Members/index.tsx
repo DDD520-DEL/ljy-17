@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Plus, Search, Edit3, Trash2, User, Phone, Heart, X } from 'lucide-react';
+import { Plus, Search, Edit3, Trash2, User, Phone, Heart, X, Download, FileText, Smartphone, Printer, Info } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { FamilyMember } from '@/types';
+import { FamilyMember, ContactExportFormat, ContactExportScope } from '@/types';
 import { getGenerationName } from '@/utils/dateUtils';
 
 export default function MembersList() {
   const location = useLocation();
-  const { members, addMember, updateMember, deleteMember, globalSearchTerm, branches } = useAppStore();
+  const { members, addMember, updateMember, deleteMember, globalSearchTerm, branches, exportContacts, settings } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportFormat, setExportFormat] = useState<ContactExportFormat>('vcard');
+  const [exportScope, setExportScope] = useState<ContactExportScope>('all');
+  const [includeBranch, setIncludeBranch] = useState(true);
+  const [includeGeneration, setIncludeGeneration] = useState(true);
+  const [includeBirthDate, setIncludeBirthDate] = useState(true);
 
   useEffect(() => {
     const state = location.state as { searchTerm?: string } | null;
@@ -20,6 +26,43 @@ export default function MembersList() {
       setSearchTerm(globalSearchTerm);
     }
   }, [location.state, globalSearchTerm]);
+
+  useEffect(() => {
+    const exportSettings = settings.contactExportSettings;
+    setExportFormat(exportSettings.defaultFormat);
+    setExportScope(exportSettings.defaultScope);
+    setIncludeBranch(exportSettings.includeBranch);
+    setIncludeGeneration(exportSettings.includeGeneration);
+    setIncludeBirthDate(exportSettings.includeBirthDate);
+  }, [settings.contactExportSettings]);
+
+  const handleOpenExportDialog = () => {
+    const exportSettings = settings.contactExportSettings;
+    setExportFormat(exportSettings.defaultFormat);
+    setExportScope(exportSettings.defaultScope);
+    setIncludeBranch(exportSettings.includeBranch);
+    setIncludeGeneration(exportSettings.includeGeneration);
+    setIncludeBirthDate(exportSettings.includeBirthDate);
+    setShowExportDialog(true);
+  };
+
+  const handleExport = () => {
+    exportContacts({
+      format: exportFormat,
+      scope: exportScope,
+      includeBranch,
+      includeGeneration,
+      includeBirthDate,
+    });
+    setShowExportDialog(false);
+  };
+
+  const getExportCount = () => {
+    const filtered = exportScope === 'alive'
+      ? members.filter(m => m.isAlive)
+      : members;
+    return filtered.length;
+  };
   const [showForm, setShowForm] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
@@ -99,13 +142,22 @@ export default function MembersList() {
             共 {members.length} 位家属成员，{members.filter(m => m.isAlive).length} 位在世
           </p>
         </div>
-        <button 
-          onClick={() => setShowForm(true)}
-          className="btn-primary inline-flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          添加成员
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleOpenExportDialog}
+            className="btn-secondary inline-flex items-center gap-2"
+          >
+            <Download className="w-5 h-5" />
+            导出通讯录
+          </button>
+          <button 
+            onClick={() => setShowForm(true)}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            添加成员
+          </button>
+        </div>
       </div>
 
       <div className="card mb-6">
@@ -460,6 +512,204 @@ export default function MembersList() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {showExportDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto animate-fade-in">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-serif text-xl font-bold text-brown-800">
+                导出通讯录
+              </h3>
+              <button 
+                onClick={() => setShowExportDialog(false)}
+                className="p-2 hover:bg-brown-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-brown-500" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-brown-700 mb-3">
+                  导出范围
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setExportScope('all')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      exportScope === 'all'
+                        ? 'border-brown-600 bg-brown-50'
+                        : 'border-brown-200 hover:border-brown-300'
+                    }`}
+                  >
+                    <div className="text-lg mb-1">👨‍👩‍👧‍👦</div>
+                    <div className={`font-medium text-sm ${
+                      exportScope === 'all' ? 'text-brown-800' : 'text-brown-600'
+                    }`}>
+                      全部成员
+                    </div>
+                    <div className="text-xs text-brown-500 mt-1">
+                      共 {members.length} 人
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setExportScope('alive')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      exportScope === 'alive'
+                        ? 'border-brown-600 bg-brown-50'
+                        : 'border-brown-200 hover:border-brown-300'
+                    }`}
+                  >
+                    <div className="text-lg mb-1">❤️</div>
+                    <div className={`font-medium text-sm ${
+                      exportScope === 'alive' ? 'text-brown-800' : 'text-brown-600'
+                    }`}>
+                      仅在世成员
+                    </div>
+                    <div className="text-xs text-brown-500 mt-1">
+                      共 {members.filter(m => m.isAlive).length} 人
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-brown-700 mb-3">
+                  导出格式
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    onClick={() => setExportFormat('vcard')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      exportFormat === 'vcard'
+                        ? 'border-brown-600 bg-brown-50'
+                        : 'border-brown-200 hover:border-brown-300'
+                    }`}
+                  >
+                    <Smartphone className={`w-6 h-6 mx-auto mb-2 ${
+                      exportFormat === 'vcard' ? 'text-brown-700' : 'text-brown-400'
+                    }`} />
+                    <div className={`font-medium text-xs ${
+                      exportFormat === 'vcard' ? 'text-brown-800' : 'text-brown-600'
+                    }`}>
+                      手机通讯录
+                    </div>
+                    <div className="text-xs text-brown-400 mt-1">
+                      VCF格式
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setExportFormat('csv')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      exportFormat === 'csv'
+                        ? 'border-brown-600 bg-brown-50'
+                        : 'border-brown-200 hover:border-brown-300'
+                    }`}
+                  >
+                    <FileText className={`w-6 h-6 mx-auto mb-2 ${
+                      exportFormat === 'csv' ? 'text-brown-700' : 'text-brown-400'
+                    }`} />
+                    <div className={`font-medium text-xs ${
+                      exportFormat === 'csv' ? 'text-brown-800' : 'text-brown-600'
+                    }`}>
+                      表格文件
+                    </div>
+                    <div className="text-xs text-brown-400 mt-1">
+                      CSV格式
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setExportFormat('print')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      exportFormat === 'print'
+                        ? 'border-brown-600 bg-brown-50'
+                        : 'border-brown-200 hover:border-brown-300'
+                    }`}
+                  >
+                    <Printer className={`w-6 h-6 mx-auto mb-2 ${
+                      exportFormat === 'print' ? 'text-brown-700' : 'text-brown-400'
+                    }`} />
+                    <div className={`font-medium text-xs ${
+                      exportFormat === 'print' ? 'text-brown-800' : 'text-brown-600'
+                    }`}>
+                      打印名录
+                    </div>
+                    <div className="text-xs text-brown-400 mt-1">
+                      可打印
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-brown-700 mb-3">
+                  包含内容
+                </label>
+                <div className="space-y-3 bg-cream-50 rounded-xl p-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeBranch}
+                      onChange={(e) => setIncludeBranch(e.target.checked)}
+                      className="w-4 h-4 rounded border-brown-300 text-brown-600 focus:ring-brown-500"
+                    />
+                    <span className="text-sm text-brown-700">家族分支</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeGeneration}
+                      onChange={(e) => setIncludeGeneration(e.target.checked)}
+                      className="w-4 h-4 rounded border-brown-300 text-brown-600 focus:ring-brown-500"
+                    />
+                    <span className="text-sm text-brown-700">辈分信息</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeBirthDate}
+                      onChange={(e) => setIncludeBirthDate(e.target.checked)}
+                      className="w-4 h-4 rounded border-brown-300 text-brown-600 focus:ring-brown-500"
+                    />
+                    <span className="text-sm text-brown-700">出生日期</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="bg-gold-50 border border-gold-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-gold-700 mb-2">
+                  <Info className="w-4 h-4" />
+                  <span className="text-sm font-medium">导出预览</span>
+                </div>
+                <p className="text-sm text-gold-600">
+                  将导出 <span className="font-bold">{getExportCount()}</span> 位家属成员的联系方式
+                  {exportFormat === 'vcard' && '，可直接导入手机通讯录'}
+                  {exportFormat === 'csv' && '，可用Excel打开查看'}
+                  {exportFormat === 'print' && '，将自动打开打印预览'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-6 mt-6 border-t border-brown-100">
+              <button
+                type="button"
+                onClick={() => setShowExportDialog(false)}
+                className="btn-secondary"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleExport}
+                className="btn-primary flex items-center gap-2"
+                disabled={getExportCount() === 0}
+              >
+                <Download className="w-4 h-4" />
+                导出 {getExportCount()} 人
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

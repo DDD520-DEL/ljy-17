@@ -76,9 +76,28 @@ export interface FamilyMember {
   createdAt: string;
 }
 
+export type ContactExportFormat = 'vcard' | 'csv' | 'print';
+export type ContactExportScope = 'all' | 'alive';
+
+export interface ContactExportOptions {
+  format: ContactExportFormat;
+  scope: ContactExportScope;
+  includeBranch: boolean;
+  includeGeneration: boolean;
+  includeBirthDate: boolean;
+}
+
 export interface ShareSettings {
   includeBirthDeathDates: boolean;
   includePhotos: boolean;
+}
+
+export interface ContactExportSettings {
+  defaultScope: ContactExportScope;
+  defaultFormat: ContactExportFormat;
+  includeBranch: boolean;
+  includeGeneration: boolean;
+  includeBirthDate: boolean;
 }
 
 export interface OfferingItem {
@@ -154,6 +173,7 @@ export interface AppSettings {
   notificationEnabled: boolean;
   shareSettings: ShareSettings;
   lowStockThreshold: number;
+  contactExportSettings: ContactExportSettings;
 }
 
 export interface RitualReservation {

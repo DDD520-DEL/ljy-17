@@ -21,10 +21,12 @@ import {
   MemorialArticle,
   RitualExpense,
   OfferingWiki,
+  ContactExportOptions,
 } from '@/types';
 import { storage } from '@/utils/storage';
 import { getReminders } from '@/utils/dateUtils';
 import { initializeMockData } from '@/utils/mockData';
+import { exportContacts } from '@/utils/contactExport';
 import { authService } from '@/services/authService';
 import { syncService } from '@/services/syncService';
 import { syncOrchestrator, conflictResolver } from '@/services/cloudSync';
@@ -118,6 +120,7 @@ interface AppState {
   exportData: () => string;
   importData: (jsonStr: string) => boolean;
   clearAllData: () => void;
+  exportContacts: (options: Partial<ContactExportOptions>) => void;
 
   checkAuth: () => Promise<void>;
   login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
@@ -156,6 +159,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       includePhotos: true,
     },
     lowStockThreshold: 2,
+    contactExportSettings: {
+      defaultScope: 'all',
+      defaultFormat: 'vcard',
+      includeBranch: true,
+      includeGeneration: true,
+      includeBirthDate: true,
+    },
   },
   reminders: [],
   isInitialized: false,
@@ -642,6 +652,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   exportData: () => {
     return storage.exportData();
   },
+
+  exportContacts: (options) => {
+    const { members, branches, settings } = get();
+    const defaultSettings = settings.contactExportSettings;
+    const exportOptions: ContactExportOptions = {
+      format: options.format || defaultSettings.defaultFormat,
+      scope: options.scope || defaultSettings.defaultScope,
+      includeBranch: options.includeBranch ?? defaultSettings.includeBranch,
+      includeGeneration: options.includeGeneration ?? defaultSettings.includeGeneration,
+      includeBirthDate: options.includeBirthDate ?? defaultSettings.includeBirthDate,
+    };
+    exportContacts(members, branches, exportOptions);
+  },
   
   importData: (jsonStr) => {
     const success = storage.importData(jsonStr);
@@ -692,6 +715,13 @@ export const useAppStore = create<AppState>((set, get) => ({
           includePhotos: true,
         },
         lowStockThreshold: 2,
+        contactExportSettings: {
+          defaultScope: 'all',
+          defaultFormat: 'vcard',
+          includeBranch: true,
+          includeGeneration: true,
+          includeBirthDate: true,
+        },
       },
       reminders: [],
       syncState: {

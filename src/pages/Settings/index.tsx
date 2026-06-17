@@ -31,6 +31,10 @@ import {
   Calendar,
   Image,
   Package,
+  Contact,
+  Smartphone,
+  FileText,
+  Printer,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { FamilyBranch, ConflictResolution } from '@/types';
@@ -699,6 +703,250 @@ export default function SettingsPage() {
                 />
                 <div className="w-11 h-6 bg-brown-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
               </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-indigo-100 rounded-xl">
+              <Contact className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-semibold text-brown-800">通讯录导出设置</h3>
+              <p className="text-sm text-brown-500">配置通讯录导出时的默认选项和包含内容</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-brown-700 mb-3">
+                默认导出范围
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => updateSettings({
+                    contactExportSettings: {
+                      ...settings.contactExportSettings,
+                      defaultScope: 'all',
+                    },
+                  })}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    settings.contactExportSettings.defaultScope === 'all'
+                      ? 'border-brown-600 bg-brown-50'
+                      : 'border-brown-200 hover:border-brown-300'
+                  }`}
+                >
+                  <div className="text-lg mb-1">👨‍👩‍👧‍👦</div>
+                  <div className={`font-medium text-sm ${
+                    settings.contactExportSettings.defaultScope === 'all' ? 'text-brown-800' : 'text-brown-600'
+                  }`}>
+                    全部成员
+                  </div>
+                  <div className="text-xs text-brown-500 mt-1">
+                    包含在世和已逝世成员
+                  </div>
+                </button>
+                <button
+                  onClick={() => updateSettings({
+                    contactExportSettings: {
+                      ...settings.contactExportSettings,
+                      defaultScope: 'alive',
+                    },
+                  })}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    settings.contactExportSettings.defaultScope === 'alive'
+                      ? 'border-brown-600 bg-brown-50'
+                      : 'border-brown-200 hover:border-brown-300'
+                  }`}
+                >
+                  <div className="text-lg mb-1">❤️</div>
+                  <div className={`font-medium text-sm ${
+                    settings.contactExportSettings.defaultScope === 'alive' ? 'text-brown-800' : 'text-brown-600'
+                  }`}>
+                    仅在世成员
+                  </div>
+                  <div className="text-xs text-brown-500 mt-1">
+                    只包含在世成员
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-brown-700 mb-3">
+                默认导出格式
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  onClick={() => updateSettings({
+                    contactExportSettings: {
+                      ...settings.contactExportSettings,
+                      defaultFormat: 'vcard',
+                    },
+                  })}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    settings.contactExportSettings.defaultFormat === 'vcard'
+                      ? 'border-brown-600 bg-brown-50'
+                      : 'border-brown-200 hover:border-brown-300'
+                  }`}
+                >
+                  <Smartphone className={`w-6 h-6 mx-auto mb-2 ${
+                    settings.contactExportSettings.defaultFormat === 'vcard' ? 'text-brown-700' : 'text-brown-400'
+                  }`} />
+                  <div className={`font-medium text-xs ${
+                    settings.contactExportSettings.defaultFormat === 'vcard' ? 'text-brown-800' : 'text-brown-600'
+                  }`}>
+                    手机通讯录
+                  </div>
+                  <div className="text-xs text-brown-400 mt-1">
+                    VCF格式
+                  </div>
+                </button>
+                <button
+                  onClick={() => updateSettings({
+                    contactExportSettings: {
+                      ...settings.contactExportSettings,
+                      defaultFormat: 'csv',
+                    },
+                  })}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    settings.contactExportSettings.defaultFormat === 'csv'
+                      ? 'border-brown-600 bg-brown-50'
+                      : 'border-brown-200 hover:border-brown-300'
+                  }`}
+                >
+                  <FileText className={`w-6 h-6 mx-auto mb-2 ${
+                    settings.contactExportSettings.defaultFormat === 'csv' ? 'text-brown-700' : 'text-brown-400'
+                  }`} />
+                  <div className={`font-medium text-xs ${
+                    settings.contactExportSettings.defaultFormat === 'csv' ? 'text-brown-800' : 'text-brown-600'
+                  }`}>
+                    表格文件
+                  </div>
+                  <div className="text-xs text-brown-400 mt-1">
+                    CSV格式
+                  </div>
+                </button>
+                <button
+                  onClick={() => updateSettings({
+                    contactExportSettings: {
+                      ...settings.contactExportSettings,
+                      defaultFormat: 'print',
+                    },
+                  })}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    settings.contactExportSettings.defaultFormat === 'print'
+                      ? 'border-brown-600 bg-brown-50'
+                      : 'border-brown-200 hover:border-brown-300'
+                  }`}
+                >
+                  <Printer className={`w-6 h-6 mx-auto mb-2 ${
+                    settings.contactExportSettings.defaultFormat === 'print' ? 'text-brown-700' : 'text-brown-400'
+                  }`} />
+                  <div className={`font-medium text-xs ${
+                    settings.contactExportSettings.defaultFormat === 'print' ? 'text-brown-800' : 'text-brown-600'
+                  }`}>
+                    打印名录
+                  </div>
+                  <div className="text-xs text-brown-400 mt-1">
+                    可打印
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-brown-700 mb-3">
+                默认包含内容
+              </label>
+              <div className="space-y-3 bg-cream-50 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <GitBranch className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-brown-700">家族分支</p>
+                      <p className="text-xs text-brown-500">导出时包含成员所属的家族分支</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings.contactExportSettings.includeBranch}
+                      onChange={(e) => updateSettings({
+                        contactExportSettings: {
+                          ...settings.contactExportSettings,
+                          includeBranch: e.target.checked,
+                        },
+                      })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-brown-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-100 rounded-lg">
+                      <Info className="w-4 h-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-brown-700">辈分信息</p>
+                      <p className="text-xs text-brown-500">导出时包含成员的辈分（如父辈、我辈等）</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings.contactExportSettings.includeGeneration}
+                      onChange={(e) => updateSettings({
+                        contactExportSettings: {
+                          ...settings.contactExportSettings,
+                          includeGeneration: e.target.checked,
+                        },
+                      })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-brown-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-brown-700">出生日期</p>
+                      <p className="text-xs text-brown-500">导出时包含成员的出生日期</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings.contactExportSettings.includeBirthDate}
+                      onChange={(e) => updateSettings({
+                        contactExportSettings: {
+                          ...settings.contactExportSettings,
+                          includeBirthDate: e.target.checked,
+                        },
+                      })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-brown-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+              <p className="text-xs text-indigo-600 leading-relaxed">
+                💡 <span className="font-medium">温馨提示：</span>
+                以上设置为导出通讯录时的默认选项，您在实际导出时仍可根据需要临时调整。
+                导出的通讯录文件可用于分享给其他家族成员，方便大家互相联系。
+              </p>
             </div>
           </div>
         </div>

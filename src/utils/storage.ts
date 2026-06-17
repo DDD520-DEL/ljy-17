@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation, FamilyRule, MemorialArticle, RitualExpense, OfferingWiki } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation, FamilyRule, MemorialArticle, RitualExpense, OfferingWiki, ContactExportSettings } from '@/types';
 import { changeTracker } from '@/services/changeTracker';
 
 const STORAGE_KEYS = {
@@ -18,6 +18,14 @@ const STORAGE_KEYS = {
   SETTINGS: 'family_settings',
 };
 
+const defaultContactExportSettings: ContactExportSettings = {
+  defaultScope: 'all',
+  defaultFormat: 'vcard',
+  includeBranch: true,
+  includeGeneration: true,
+  includeBirthDate: true,
+};
+
 const defaultSettings: AppSettings = {
   reminderDays: 7,
   theme: 'light',
@@ -27,6 +35,7 @@ const defaultSettings: AppSettings = {
     includePhotos: true,
   },
   lowStockThreshold: 2,
+  contactExportSettings: defaultContactExportSettings,
 };
 
 export const storage = {
@@ -314,12 +323,34 @@ export const storage = {
 
   getSettings(): AppSettings {
     const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    return data ? JSON.parse(data) : defaultSettings;
+    if (data) {
+      const parsed = JSON.parse(data);
+      return {
+        ...defaultSettings,
+        ...parsed,
+        contactExportSettings: {
+          ...defaultContactExportSettings,
+          ...parsed.contactExportSettings,
+        },
+      };
+    }
+    return defaultSettings;
   },
 
   updateSettings(settings: Partial<AppSettings>): AppSettings {
     const current = this.getSettings();
-    const updated = { ...current, ...settings };
+    const updated: AppSettings = {
+      ...current,
+      ...settings,
+      shareSettings: {
+        ...current.shareSettings,
+        ...settings.shareSettings,
+      },
+      contactExportSettings: {
+        ...current.contactExportSettings,
+        ...settings.contactExportSettings,
+      },
+    };
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
     changeTracker.recordChange('settings', 'settings', 'update');
     return updated;
