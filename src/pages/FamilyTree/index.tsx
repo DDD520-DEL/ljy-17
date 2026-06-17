@@ -304,6 +304,7 @@ export default function FamilyTree() {
   const [isExporting, setIsExporting] = useState(false);
   const [showExportOptions, setShowExportOptions] = useState(false);
   const [exportExpandAll, setExportExpandAll] = useState(false);
+  const [currentExportType, setCurrentExportType] = useState<'tree' | 'list' | null>(null);
   const exportContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredMembers = selectedBranch === null
@@ -350,6 +351,7 @@ export default function FamilyTree() {
   };
 
   const handleExport = async (exportType: 'tree' | 'list') => {
+    setCurrentExportType(exportType);
     setIsExporting(true);
     setShowExportOptions(false);
 
@@ -380,6 +382,7 @@ export default function FamilyTree() {
       alert('导出失败，请重试');
     } finally {
       setIsExporting(false);
+      setCurrentExportType(null);
     }
   };
 
@@ -702,7 +705,9 @@ export default function FamilyTree() {
         style={{ minWidth: '1200px' }}
       >
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-serif font-bold text-brown-800 mb-2">家族族谱</h1>
+          <h1 className="text-3xl font-serif font-bold text-brown-800 mb-2">
+            家族族谱 - {currentExportType === 'tree' ? '关系树' : '成员列表'}
+          </h1>
           <p className="text-brown-500">
             导出时间：{new Date().toLocaleString('zh-CN')}
           </p>
@@ -738,88 +743,94 @@ export default function FamilyTree() {
           </div>
         </div>
 
-        {generations.map(gen => (
-          <div key={gen} className="mb-8">
-            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-brown-200">
-              <div className="w-8 h-8 bg-gradient-to-br from-gold-400 to-gold-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                {gen + 3}
-              </div>
-              <h3 className="font-serif text-lg font-semibold text-brown-800">
-                {getGenerationName(gen)}
-              </h3>
-              <span className="text-sm text-brown-500">
-                ({filteredMembers.filter(m => m.generation === gen).length} 人)
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              {filteredMembers.filter(m => m.generation === gen).map(member => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-3 p-3 bg-cream-50 rounded-xl border border-brown-100"
-                >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-soft ${
-                    member.gender === 'male'
-                      ? 'bg-gradient-to-br from-blue-400 to-blue-600'
-                      : 'bg-gradient-to-br from-pink-400 to-pink-600'
-                  } ${!member.isAlive ? 'opacity-60 grayscale' : ''}`}>
-                    {includePhotos && member.avatar ? (
-                      <img 
-                        src={member.avatar} 
-                        alt={member.name} 
-                        className="w-full h-full rounded-full object-cover" 
-                        crossOrigin="anonymous"
-                      />
-                    ) : (
-                      <User className="w-5 h-5 text-white" />
-                    )}
+        {currentExportType === 'list' && (
+          <>
+            {generations.map(gen => (
+              <div key={gen} className="mb-8">
+                <div className="flex items-center gap-3 mb-4 pb-3 border-b border-brown-200">
+                  <div className="w-8 h-8 bg-gradient-to-br from-gold-400 to-gold-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                    {gen + 3}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`font-medium text-sm truncate ${member.isAlive ? 'text-brown-800' : 'text-brown-400'}`}>
-                        {member.name}
-                      </span>
-                      {!member.isAlive && (
-                        <Heart className="w-3 h-3 text-brown-400 flex-shrink-0" />
-                      )}
-                    </div>
-                    <p className="text-xs text-brown-500 truncate">{member.relationship}</p>
-                    {includeBirthDeathDates && member.birthDate && (
-                      <p className="text-xs text-brown-400">
-                        {member.birthDate}
-                      </p>
-                    )}
-                  </div>
+                  <h3 className="font-serif text-lg font-semibold text-brown-800">
+                    {getGenerationName(gen)}
+                  </h3>
+                  <span className="text-sm text-brown-500">
+                    ({filteredMembers.filter(m => m.generation === gen).length} 人)
+                  </span>
                 </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {filteredMembers.filter(m => m.generation === gen).map(member => (
+                    <div
+                      key={member.id}
+                      className="flex items-center gap-3 p-3 bg-cream-50 rounded-xl border border-brown-100"
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-soft ${
+                        member.gender === 'male'
+                          ? 'bg-gradient-to-br from-blue-400 to-blue-600'
+                          : 'bg-gradient-to-br from-pink-400 to-pink-600'
+                      } ${!member.isAlive ? 'opacity-60 grayscale' : ''}`}>
+                        {includePhotos && member.avatar ? (
+                          <img 
+                            src={member.avatar} 
+                            alt={member.name} 
+                            className="w-full h-full rounded-full object-cover" 
+                            crossOrigin="anonymous"
+                          />
+                        ) : (
+                          <User className="w-5 h-5 text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`font-medium text-sm truncate ${member.isAlive ? 'text-brown-800' : 'text-brown-400'}`}>
+                            {member.name}
+                          </span>
+                          {!member.isAlive && (
+                            <Heart className="w-3 h-3 text-brown-400 flex-shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-xs text-brown-500 truncate">{member.relationship}</p>
+                        {includeBirthDeathDates && member.birthDate && (
+                          <p className="text-xs text-brown-400">
+                            {member.birthDate}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {currentExportType === 'tree' && (
+          <div className="mt-8">
+            <h2 className="text-xl font-serif font-semibold text-brown-800 mb-4 flex items-center gap-2">
+              <TreeDeciduous className="w-5 h-5 text-gold-500" />
+              家族关系树
+            </h2>
+            <p className="text-xs text-brown-500 mb-4">
+              {exportExpandAll
+                ? '已展开所有节点'
+                : effectiveExpandedNodes.size > 0 
+                  ? `当前已展开 ${effectiveExpandedNodes.size} 个节点的子节点`
+                  : '当前所有节点均为收起状态（仅显示根节点）'}
+            </p>
+            <div className="pl-4">
+              {roots.map((root) => (
+                <ExportTreeNodeComponent 
+                  key={root.id}
+                  node={root} 
+                  level={0}
+                  showDates={includeBirthDeathDates}
+                  showPhotos={includePhotos}
+                  expandedNodes={effectiveExpandedNodes}
+                />
               ))}
             </div>
           </div>
-        ))}
-
-        <div className="mt-8">
-          <h2 className="text-xl font-serif font-semibold text-brown-800 mb-4 flex items-center gap-2">
-            <TreeDeciduous className="w-5 h-5 text-gold-500" />
-            家族关系树
-          </h2>
-          <p className="text-xs text-brown-500 mb-4">
-            {exportExpandAll
-              ? '已展开所有节点'
-              : effectiveExpandedNodes.size > 0 
-                ? `当前已展开 ${effectiveExpandedNodes.size} 个节点的子节点`
-                : '当前所有节点均为收起状态（仅显示根节点）'}
-          </p>
-          <div className="pl-4">
-            {roots.map((root) => (
-              <ExportTreeNodeComponent 
-                key={root.id}
-                node={root} 
-                level={0}
-                showDates={includeBirthDeathDates}
-                showPhotos={includePhotos}
-                expandedNodes={effectiveExpandedNodes}
-              />
-            ))}
-          </div>
-        </div>
+        )}
 
         <div className="mt-12 pt-6 border-t border-brown-200 text-center text-xs text-brown-400">
           <p>家族祭祀管理平台 · 族谱导出</p>
