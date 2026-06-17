@@ -29,6 +29,7 @@ const ENTITY_NAMES: Record<EntityType, string> = {
   templates: '祭祀模板',
   settings: '系统设置',
   offerings: '供品库存',
+  locations: '祭祀地点',
 };
 
 export default function ConflictResolverDialog({

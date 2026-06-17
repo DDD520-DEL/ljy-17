@@ -200,7 +200,18 @@ export const FAMILY_EVENT_TYPE_META: Record<FamilyEventType, { label: string; ic
   other: { label: '其他', icon: '📌', color: 'text-gray-600', bgColor: 'bg-gray-50' },
 };
 
-export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings';
+export interface MemorialLocation {
+  id: string;
+  name: string;
+  address: string;
+  ancestorIds: string[];
+  photos?: string[];
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EntityType = 'branches' | 'ancestors' | 'rituals' | 'reservations' | 'members' | 'settings' | 'templates' | 'events' | 'offerings' | 'locations';
 
 export interface ConflictItem {
   entityType: EntityType;
@@ -229,6 +240,7 @@ export interface CloudDataSnapshot {
   members: FamilyMember[];
   templates: RitualTemplate[];
   offerings: OfferingItem[];
+  locations: MemorialLocation[];
   settings: AppSettings;
   snapshotAt: string;
   version: number;

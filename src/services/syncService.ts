@@ -10,6 +10,7 @@ import {
   RitualTemplate,
   FamilyEvent,
   OfferingItem,
+  MemorialLocation,
 } from '@/types';
 import { authService } from './authService';
 
@@ -55,6 +56,7 @@ export const syncService = {
     members: FamilyMember[];
     templates: RitualTemplate[];
     offerings: OfferingItem[];
+    locations: MemorialLocation[];
     settings: AppSettings;
   }): Promise<{ success: boolean; snapshot?: CloudDataSnapshot; error?: string }> {
     await delay(700);
@@ -75,6 +77,7 @@ export const syncService = {
         members: data.members,
         templates: data.templates,
         offerings: data.offerings,
+        locations: data.locations,
         settings: data.settings,
         snapshotAt: new Date().toISOString(),
         version: getNextVersion(auth.userId),
@@ -112,6 +115,7 @@ export const syncService = {
     members: FamilyMember[];
     templates: RitualTemplate[];
     offerings: OfferingItem[];
+    locations: MemorialLocation[];
     settings: AppSettings;
   }): Promise<SyncResult> {
     await delay(1000);
@@ -135,6 +139,7 @@ export const syncService = {
           members: data.members,
           templates: data.templates,
           offerings: data.offerings,
+          locations: data.locations,
           settings: data.settings,
           snapshotAt: new Date().toISOString(),
           version: getNextVersion(auth.userId),
@@ -143,7 +148,7 @@ export const syncService = {
         return {
           success: true,
           syncedAt: newSnapshot.snapshotAt,
-          changesApplied: { local: 0, remote: data.branches.length + data.ancestors.length + data.rituals.length + data.events.length + data.reservations.length + data.members.length + data.templates.length + data.offerings.length },
+          changesApplied: { local: 0, remote: data.branches.length + data.ancestors.length + data.rituals.length + data.events.length + data.reservations.length + data.members.length + data.templates.length + data.offerings.length + data.locations.length },
         };
       }
 
@@ -166,6 +171,7 @@ export const syncService = {
     members: FamilyMember[];
     templates: RitualTemplate[];
     offerings: OfferingItem[];
+    locations: MemorialLocation[];
     settings: AppSettings;
   }): Promise<{ success: boolean; snapshot?: CloudDataSnapshot; error?: string }> {
     return this.uploadSnapshot(data);

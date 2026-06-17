@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, Plus, X, ImagePlus, FileText, Check, AlertTriangle, Package } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus, X, ImagePlus, FileText, Check, AlertTriangle, Package, MapPin } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Ritual, RitualTemplate, OfferingItem } from '@/types';
 
@@ -15,7 +15,8 @@ export default function RitualForm({ mode }: RitualFormProps) {
   const preselectedAncestorId = searchParams.get('ancestorId');
   const templateId = searchParams.get('templateId');
   
-  const { addRitual, updateRitual, deleteRitual, rituals, ancestors, branches, templates, offerings, settings } = useAppStore();
+  const { addRitual, updateRitual, deleteRitual, rituals, ancestors, branches, templates, offerings, settings, locations } = useAppStore();
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null);
   const [showStockDeductionInfo, setShowStockDeductionInfo] = useState(false);
@@ -359,9 +360,19 @@ export default function RitualForm({ mode }: RitualFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-brown-700 mb-2">
-            墓地位置 <span className="text-red-500">*</span>
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-brown-700">
+              墓地位置 <span className="text-red-500">*</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowLocationPicker(!showLocationPicker)}
+              className="text-xs text-gold-600 hover:text-gold-700 flex items-center gap-1"
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              从地点库选择
+            </button>
+          </div>
           <input
             type="text"
             value={formData.location || ''}
@@ -375,6 +386,59 @@ export default function RitualForm({ mode }: RitualFormProps) {
             className={`input-field ${errors.location ? 'border-red-400 focus:border-red-400 focus:ring-red-200' : ''}`}
           />
           {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
+
+          {showLocationPicker && (
+            <div className="mt-3 p-3 bg-cream-50 rounded-xl border border-brown-100">
+              <p className="text-xs text-brown-500 mb-2 flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5" />
+                选择已保存的祭祀地点：
+              </p>
+              {locations.length === 0 ? (
+                <div className="text-center py-4 text-brown-400">
+                  <p className="text-sm">暂无保存的地点</p>
+                  <Link
+                    to="/locations"
+                    className="inline-block mt-2 text-gold-600 hover:text-gold-700 underline text-xs"
+                    target="_blank"
+                  >
+                    去添加地点 →
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {locations.map((loc) => (
+                    <button
+                      key={loc.id}
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, location: loc.name + ' - ' + loc.address }));
+                        setShowLocationPicker(false);
+                        if (errors.location) {
+                          setErrors(prev => ({ ...prev, location: '' }));
+                        }
+                      }}
+                      className={`w-full text-left p-3 rounded-lg border transition-all ${
+                        formData.location === loc.name + ' - ' + loc.address
+                          ? 'border-gold-500 bg-gold-50'
+                          : 'border-brown-200 bg-white hover:border-brown-400'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-4 h-4 text-brown-400 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-brown-800 text-sm">{loc.name}</p>
+                          <p className="text-xs text-brown-500 truncate">{loc.address}</p>
+                        </div>
+                        {formData.location === loc.name + ' - ' + loc.address && (
+                          <Check className="w-4 h-4 text-gold-600 flex-shrink-0" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div>

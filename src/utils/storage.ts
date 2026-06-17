@@ -1,4 +1,4 @@
-import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem } from '@/types';
+import { Ancestor, Ritual, FamilyMember, AppSettings, RitualReservation, FamilyBranch, RitualTemplate, FamilyEvent, OfferingItem, MemorialLocation } from '@/types';
 import { changeTracker } from '@/services/changeTracker';
 
 const STORAGE_KEYS = {
@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   MEMBERS: 'family_members',
   TEMPLATES: 'ritual_templates',
   OFFERINGS: 'ritual_offerings',
+  LOCATIONS: 'memorial_locations',
   SETTINGS: 'family_settings',
 };
 
@@ -429,6 +430,52 @@ export const storage = {
     return true;
   },
 
+  getLocations(): MemorialLocation[] {
+    const data = localStorage.getItem(STORAGE_KEYS.LOCATIONS);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setLocations(locations: MemorialLocation[]): void {
+    localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(locations));
+  },
+
+  addLocation(location: Omit<MemorialLocation, 'id' | 'createdAt' | 'updatedAt'>): MemorialLocation {
+    const locations = this.getLocations();
+    const newLocation: MemorialLocation = {
+      ...location,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    locations.push(newLocation);
+    this.setLocations(locations);
+    changeTracker.recordChange('locations', newLocation.id, 'create');
+    return newLocation;
+  },
+
+  updateLocation(id: string, data: Partial<MemorialLocation>): MemorialLocation | null {
+    const locations = this.getLocations();
+    const index = locations.findIndex(l => l.id === id);
+    if (index === -1) return null;
+    locations[index] = {
+      ...locations[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setLocations(locations);
+    changeTracker.recordChange('locations', id, 'update');
+    return locations[index];
+  },
+
+  deleteLocation(id: string): boolean {
+    const locations = this.getLocations();
+    const filtered = locations.filter(l => l.id !== id);
+    if (filtered.length === locations.length) return false;
+    this.setLocations(filtered);
+    changeTracker.recordChange('locations', id, 'delete');
+    return true;
+  },
+
   exportData(): string {
     const data = {
       branches: this.getBranches(),
@@ -439,6 +486,7 @@ export const storage = {
       members: this.getMembers(),
       templates: this.getTemplates(),
       offerings: this.getOfferings(),
+      locations: this.getLocations(),
       settings: this.getSettings(),
       exportedAt: new Date().toISOString(),
     };
@@ -456,6 +504,7 @@ export const storage = {
       if (data.members) this.setMembers(data.members);
       if (data.templates) this.setTemplates(data.templates);
       if (data.offerings) this.setOfferings(data.offerings);
+      if (data.locations) this.setLocations(data.locations);
       if (data.settings) this.updateSettings(data.settings);
       return true;
     } catch {
@@ -472,6 +521,7 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.MEMBERS);
     localStorage.removeItem(STORAGE_KEYS.TEMPLATES);
     localStorage.removeItem(STORAGE_KEYS.OFFERINGS);
+    localStorage.removeItem(STORAGE_KEYS.LOCATIONS);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
   },
 };

@@ -14,6 +14,7 @@ import {
   CalendarRange,
   Sparkles,
   Package,
+  MapPin,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -24,6 +25,7 @@ const navItems = [
   { path: '/rituals', icon: CalendarDays, label: '祭祀记录' },
   { path: '/ritual-templates', icon: FileText, label: '祭祀模板' },
   { path: '/offerings', icon: Package, label: '供品库存' },
+  { path: '/locations', icon: MapPin, label: '祭祀地点' },
   { path: '/family-events', icon: Sparkles, label: '家族大事记' },
   { path: '/album', icon: Camera, label: '家族相册' },
   { path: '/timeline', icon: ScrollText, label: '祭祀年表' },
