@@ -15,6 +15,10 @@ const defaultSettings: AppSettings = {
   reminderDays: 7,
   theme: 'light',
   notificationEnabled: true,
+  shareSettings: {
+    includeBirthDeathDates: true,
+    includePhotos: true,
+  },
 };
 
 export const storage = {

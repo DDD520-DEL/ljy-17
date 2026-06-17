@@ -27,6 +27,9 @@ import {
   Wifi,
   WifiOff,
   ChevronRight,
+  Share2,
+  Calendar,
+  Image,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { FamilyBranch, ConflictResolution } from '@/types';
@@ -574,6 +577,72 @@ export default function SettingsPage() {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-amber-100 rounded-xl">
+              <Share2 className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-semibold text-brown-800">分享与导出设置</h3>
+              <p className="text-sm text-brown-500">配置族谱导出和分享时包含的内容</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-cream-50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <Calendar className="w-4 h-4 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-brown-700">包含生卒日期</p>
+                  <p className="text-xs text-brown-500">导出族谱时显示成员的出生日期和逝世日期</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.shareSettings.includeBirthDeathDates}
+                  onChange={(e) => updateSettings({
+                    shareSettings: {
+                      ...settings.shareSettings,
+                      includeBirthDeathDates: e.target.checked,
+                    },
+                  })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-brown-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-cream-50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-rose-100 rounded-lg">
+                  <Image className="w-4 h-4 text-rose-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-brown-700">包含照片</p>
+                  <p className="text-xs text-brown-500">导出族谱时显示成员的头像和照片</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.shareSettings.includePhotos}
+                  onChange={(e) => updateSettings({
+                    shareSettings: {
+                      ...settings.shareSettings,
+                      includePhotos: e.target.checked,
+                    },
+                  })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-brown-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+              </label>
             </div>
           </div>
         </div>

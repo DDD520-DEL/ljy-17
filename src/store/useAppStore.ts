@@ -100,6 +100,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     reminderDays: 7,
     theme: 'light',
     notificationEnabled: true,
+    shareSettings: {
+      includeBirthDeathDates: true,
+      includePhotos: true,
+    },
   },
   reminders: [],
   isInitialized: false,
@@ -391,6 +395,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         reminderDays: 7,
         theme: 'light',
         notificationEnabled: true,
+        shareSettings: {
+          includeBirthDeathDates: true,
+          includePhotos: true,
+        },
       },
       reminders: [],
       syncState: {

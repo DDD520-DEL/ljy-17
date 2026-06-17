@@ -76,10 +76,16 @@ export interface FamilyMember {
   createdAt: string;
 }
 
+export interface ShareSettings {
+  includeBirthDeathDates: boolean;
+  includePhotos: boolean;
+}
+
 export interface AppSettings {
   reminderDays: number;
   theme: 'light' | 'dark';
   notificationEnabled: boolean;
+  shareSettings: ShareSettings;
 }
 
 export interface RitualReservation {
