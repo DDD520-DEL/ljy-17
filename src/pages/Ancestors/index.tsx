@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Plus, Search, Edit3, Calendar, User, Heart, ChevronRight } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getAge, getLunarCalendar, getGenerationName } from '@/utils/dateUtils';
+import FavoriteButton from '@/components/FavoriteButton';
 
 export default function AncestorsList() {
   const location = useLocation();
@@ -218,6 +219,12 @@ export default function AncestorsList() {
                     <ChevronRight className="w-4 h-4" />
                     查看详情
                   </Link>
+                  <FavoriteButton
+                    entityType="ancestor"
+                    entityId={ancestor.id}
+                    name={ancestor.name}
+                    subtitle={ancestor.relationship}
+                  />
                   <Link
                     to={`/ancestors/${ancestor.id}/edit`}
                     className="px-3 py-2.5 text-brown-600 hover:bg-brown-100 rounded-lg transition-colors"

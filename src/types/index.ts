@@ -426,3 +426,14 @@ export interface GraphEdgeData {
   type: GraphEdgeType;
   label?: string;
 }
+
+export type FavoriteEntityType = 'ancestor' | 'ritual' | 'member';
+
+export interface FavoriteItem {
+  id: string;
+  entityType: FavoriteEntityType;
+  entityId: string;
+  name: string;
+  subtitle?: string;
+  createdAt: string;
+}

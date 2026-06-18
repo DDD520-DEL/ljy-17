@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Plus, Search, Edit3, Trash2, User, Phone, Heart, X, Download, FileText, Smartphone, Printer, Info } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { FamilyMember, ContactExportFormat, ContactExportScope } from '@/types';
 import { getGenerationName } from '@/utils/dateUtils';
+import FavoriteButton from '@/components/FavoriteButton';
 
 export default function MembersList() {
   const location = useLocation();
@@ -430,6 +431,12 @@ export default function MembersList() {
                       )}
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <FavoriteButton
+                        entityType="member"
+                        entityId={member.id}
+                        name={member.name}
+                        subtitle={member.relationship}
+                      />
                       <button
                         onClick={() => handleEdit(member)}
                         className="p-2 hover:bg-brown-100 rounded-lg transition-colors"

@@ -1,4 +1,4 @@
-import { NavLink, Link, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   Users,
@@ -22,8 +22,12 @@ import {
   Sun,
   Network,
   BarChart3,
+  Star,
+  X,
+  ChevronRight,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { FavoriteItem } from '@/types';
 
 const navItems = [
   { path: '/', icon: Home, label: '首页', end: true },
@@ -49,15 +53,48 @@ const navItems = [
   { path: '/settings', icon: Settings, label: '系统设置' },
 ];
 
+function getFavoriteLink(item: FavoriteItem): string {
+  switch (item.entityType) {
+    case 'ancestor':
+      return `/ancestors/${item.entityId}`;
+    case 'ritual':
+      return `/rituals/${item.entityId}/edit`;
+    case 'member':
+      return `/members/${item.entityId}`;
+    default:
+      return '/';
+  }
+}
+
+function getFavoriteIcon(item: FavoriteItem) {
+  switch (item.entityType) {
+    case 'ancestor':
+      return Flame;
+    case 'ritual':
+      return CalendarDays;
+    case 'member':
+      return Users;
+    default:
+      return Star;
+  }
+}
+
 export default function Sidebar() {
   const location = useLocation();
-  const { reminders, reservations, offerings, settings } = useAppStore();
+  const navigate = useNavigate();
+  const { reminders, reservations, offerings, settings, favorites, toggleFavorite } = useAppStore();
   const urgentCount = reminders.filter(r => r.daysLeft <= 3).length;
   const pendingReservationsCount = reservations.filter(r => r.status === 'pending').length;
   const lowStockCount = offerings.filter(o => {
     const threshold = o.lowStockThreshold ?? settings.lowStockThreshold;
     return o.quantity <= threshold;
   }).length;
+
+  const handleRemoveFavorite = (e: React.MouseEvent, item: FavoriteItem) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(item.entityType, item.entityId, item.name, item.subtitle);
+  };
 
   return (
     <aside className="w-64 min-h-screen bg-gradient-to-b from-brown-50 to-cream-100 border-r border-brown-200 flex flex-col">
@@ -103,7 +140,57 @@ export default function Sidebar() {
         })}
       </nav>
       
-      <div className="p-4 border-t border-brown-200">
+      {favorites.length > 0 && (
+        <div className="px-4 pt-4 border-t border-brown-200">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center gap-1.5">
+              <Star className="w-4 h-4 text-gold-500 fill-gold-500" />
+              <span className="text-sm font-medium text-brown-700">我的收藏</span>
+              <span className="text-xs text-brown-400">({favorites.length})</span>
+            </div>
+          </div>
+          <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-thin">
+            {favorites.map((item) => {
+              const Icon = getFavoriteIcon(item);
+              const link = getFavoriteLink(item);
+              const isActive = location.pathname === link;
+              return (
+                <div
+                  key={item.id}
+                  className={`group flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-all ${
+                    isActive
+                      ? 'bg-gold-50 border border-gold-200'
+                      : 'hover:bg-brown-50 border border-transparent'
+                  }`}
+                  onClick={() => navigate(link)}
+                >
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-gold-600' : 'text-brown-400'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm truncate ${isActive ? 'text-brown-800 font-medium' : 'text-brown-600'}`}>
+                      {item.name}
+                    </p>
+                    {item.subtitle && (
+                      <p className="text-xs text-brown-400 truncate">{item.subtitle}</p>
+                    )}
+                  </div>
+                  <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 transition-all ${
+                    isActive ? 'text-gold-500' : 'text-brown-300 opacity-0 group-hover:opacity-100'
+                  }`} />
+                  <button
+                    onClick={(e) => handleRemoveFavorite(e, item)}
+                    className="p-0.5 rounded text-brown-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                    title="取消收藏"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="p-4 border-t border-brown-200 mt-auto">
         <div className="bg-gradient-to-r from-brown-100 to-cream-100 rounded-xl p-4">
           <p className="text-sm text-brown-600 mb-2">💡 温馨提示</p>
           <p className="text-xs text-brown-500 mb-2">

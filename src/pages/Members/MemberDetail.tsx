@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getAge, getGenerationName } from '@/utils/dateUtils';
+import FavoriteButton from '@/components/FavoriteButton';
 
 export default function MemberDetail() {
   const { id } = useParams<{ id: string }>();
@@ -64,7 +65,14 @@ export default function MemberDetail() {
           <h1 className="text-2xl font-serif font-bold text-brown-800">家属成员详情</h1>
           <p className="text-brown-500 text-sm mt-1">查看和管理家属成员信息</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <FavoriteButton
+            entityType="member"
+            entityId={member.id}
+            name={member.name}
+            subtitle={member.relationship}
+            size="md"
+          />
           <button
             onClick={() => navigate(`/members/${member.id}/edit`)}
             className="btn-secondary inline-flex items-center gap-2"

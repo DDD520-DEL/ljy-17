@@ -21,6 +21,7 @@ import {
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getAge, getLunarCalendar, getGenerationName, groupByYear } from '@/utils/dateUtils';
 import { TreeNode, FamilyMember } from '@/types';
+import FavoriteButton from '@/components/FavoriteButton';
 
 const buildTree = (members: FamilyMember[], generation: number): TreeNode[] => {
   const genMembers = members.filter(m => m.generation === generation);
@@ -239,6 +240,13 @@ export default function AncestorDetail() {
           <h1 className="text-2xl font-serif font-bold text-brown-800">先人详情</h1>
         </div>
         <div className="flex items-center gap-2">
+          <FavoriteButton
+            entityType="ancestor"
+            entityId={ancestor.id}
+            name={ancestor.name}
+            subtitle={ancestor.relationship}
+            size="md"
+          />
           <button
             onClick={() => setShowDeleteConfirm(true)}
             className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"

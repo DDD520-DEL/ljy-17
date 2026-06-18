@@ -22,8 +22,11 @@ import {
   RitualExpense,
   OfferingWiki,
   ContactExportOptions,
+  FavoriteItem,
+  FavoriteEntityType,
 } from '@/types';
 import { storage } from '@/utils/storage';
+import { favoritesStorage } from '@/utils/favorites';
 import { getReminders } from '@/utils/dateUtils';
 import { initializeMockData } from '@/utils/mockData';
 import { exportContacts } from '@/utils/contactExport';
@@ -55,10 +58,14 @@ interface AppState {
   isAuthLoading: boolean;
   syncState: SyncState;
   pendingConflicts: ConflictItem[] | null;
+  favorites: FavoriteItem[];
 
   initialize: () => void;
   refreshReminders: () => void;
   setGlobalSearchTerm: (term: string) => void;
+  refreshFavorites: () => void;
+  toggleFavorite: (entityType: FavoriteEntityType, entityId: string, name: string, subtitle?: string) => boolean;
+  isFavorite: (entityType: FavoriteEntityType, entityId: string) => boolean;
 
   addBranch: (branch: Omit<FamilyBranch, 'id' | 'createdAt' | 'updatedAt'>) => FamilyBranch;
   updateBranch: (id: string, data: Partial<FamilyBranch>) => FamilyBranch | null;
@@ -181,6 +188,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     pendingChanges: 0,
   },
   pendingConflicts: null,
+  favorites: [],
   
   initialize: () => {
     if (get().isInitialized) return;
@@ -201,6 +209,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const expenses = storage.getExpenses();
     const wiki = storage.getWiki();
     const settings = storage.getSettings();
+    const favorites = favoritesStorage.getFavorites();
     
     const reminders = getReminders(ancestors, settings.reminderDays, reservations);
     
@@ -220,6 +229,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       wiki,
       settings,
       reminders,
+      favorites,
       isInitialized: true,
     });
   },
@@ -232,6 +242,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   
   setGlobalSearchTerm: (term) => {
     set({ globalSearchTerm: term });
+  },
+
+  refreshFavorites: () => {
+    const favorites = favoritesStorage.getFavorites();
+    set({ favorites });
+  },
+
+  toggleFavorite: (entityType, entityId, name, subtitle) => {
+    const result = favoritesStorage.toggleFavorite(entityType, entityId, name, subtitle);
+    const favorites = favoritesStorage.getFavorites();
+    set({ favorites });
+    return result.isFavorite;
+  },
+
+  isFavorite: (entityType, entityId) => {
+    return favoritesStorage.isFavorite(entityType, entityId);
   },
   
   addBranch: (branch) => {
@@ -296,9 +322,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       storage.setRituals(rituals);
       storage.setReservations(reservations);
       storage.setArticles(articles);
+      favoritesStorage.removeFavorite('ancestor', id);
       const { settings } = get();
       const reminders = getReminders(ancestors, settings.reminderDays, reservations);
-      set({ ancestors, rituals, reservations, articles, reminders });
+      const favorites = favoritesStorage.getFavorites();
+      set({ ancestors, rituals, reservations, articles, reminders, favorites });
     }
     return success;
   },
@@ -436,7 +464,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     const success = storage.deleteMember(id);
     if (success) {
       const members = storage.getMembers();
-      set({ members });
+      favoritesStorage.removeFavorite('member', id);
+      const favorites = favoritesStorage.getFavorites();
+      set({ members, favorites });
     }
     return success;
   },
@@ -636,7 +666,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       const rituals = storage.getRituals();
       const expenses = storage.getExpenses().filter(e => e.ritualId !== id);
       storage.setExpenses(expenses);
-      set({ rituals, expenses });
+      favoritesStorage.removeFavorite('ritual', id);
+      const favorites = favoritesStorage.getFavorites();
+      set({ rituals, expenses, favorites });
     }
     return success;
   },

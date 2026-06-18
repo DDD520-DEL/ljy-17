@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Plus, Search, Edit3, Calendar, MapPin, Users, Gift, ChevronRight } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDate, getLunarCalendar } from '@/utils/dateUtils';
+import FavoriteButton from '@/components/FavoriteButton';
 
 export default function RitualsList() {
   const location = useLocation();
@@ -216,6 +217,12 @@ export default function RitualsList() {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <FavoriteButton
+                      entityType="ritual"
+                      entityId={ritual.id}
+                      name={`${ancestor?.name || ritual.ancestorName} 祭祀`}
+                      subtitle={formatDate(ritual.date)}
+                    />
                     <Link
                       to={`/rituals/${ritual.id}/edit`}
                       className="p-2 hover:bg-brown-100 rounded-lg transition-colors"
