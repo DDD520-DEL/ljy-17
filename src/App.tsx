@@ -33,6 +33,7 @@ import ExpenseForm from "@/pages/Expenses/ExpenseForm";
 import OfferingWikiPage from "@/pages/OfferingWiki";
 import SolarTermsGuide from "@/pages/SolarTerms";
 import RelationshipGraph from "@/pages/RelationshipGraph";
+import StatisticsPage from "@/pages/Statistics";
 import { useAppStore } from "@/store/useAppStore";
 
 function AppInitializer() {
@@ -146,6 +147,7 @@ export default function App() {
           <Route path="calendar" element={<CalendarPage />} />
           
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="statistics" element={<StatisticsPage />} />
         </Route>
       </Routes>
     </Router>

@@ -21,11 +21,13 @@ import {
   Library,
   Sun,
   Network,
+  BarChart3,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
 const navItems = [
   { path: '/', icon: Home, label: '首页', end: true },
+  { path: '/statistics', icon: BarChart3, label: '统计看板' },
   { path: '/ancestors', icon: Flame, label: '先人管理' },
   { path: '/family-rules', icon: BookOpen, label: '家训家规' },
   { path: '/memorial-articles', icon: BookText, label: '追思文章' },
