@@ -15,6 +15,7 @@ import RitualTimeline from "@/pages/Timeline";
 import FamilyTree from "@/pages/FamilyTree";
 import MembersList from "@/pages/Members";
 import MemberDetail from "@/pages/Members/MemberDetail";
+import MemberForm from "@/pages/Members/MemberForm";
 import SettingsPage from "@/pages/Settings";
 import Album from "@/pages/Album";
 import CalendarPage from "@/pages/Calendar";
@@ -123,7 +124,9 @@ export default function App() {
           <Route path="/relationship-graph" element={<RelationshipGraph />} />
           
           <Route path="/members" element={<MembersList />} />
+          <Route path="/members/new" element={<MemberForm mode="create" />} />
           <Route path="/members/:id" element={<MemberDetail />} />
+          <Route path="/members/:id/edit" element={<MemberForm mode="edit" />} />
           
           <Route path="offerings" element={<OfferingsPage />} />
           <Route path="offering-wiki" element={<OfferingWikiPage />} />
