@@ -4,6 +4,8 @@ import { ArrowLeft, Save, Trash2, Plus, X, ImagePlus, FileText, Check, AlertTria
 import { useAppStore } from '@/store/useAppStore';
 import { Ritual, RitualTemplate, OfferingItem } from '@/types';
 import OfferingWikiPicker from '@/components/OfferingWikiPicker';
+import FavoriteButton from '@/components/FavoriteButton';
+import { formatDate } from '@/utils/dateUtils';
 
 interface RitualFormProps {
   mode: 'create' | 'edit';
@@ -216,6 +218,15 @@ export default function RitualForm({ mode }: RitualFormProps) {
         <h1 className="text-2xl font-serif font-bold text-brown-800">
           {mode === 'create' ? '记录祭祀' : '编辑祭祀记录'}
         </h1>
+        {mode === 'edit' && id && formData.ancestorName && (
+          <FavoriteButton
+            entityType="ritual"
+            entityId={id}
+            name={`${formData.ancestorName} 祭祀`}
+            subtitle={formData.date ? formatDate(formData.date) : undefined}
+            size="md"
+          />
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="card space-y-6">
@@ -704,18 +715,30 @@ export default function RitualForm({ mode }: RitualFormProps) {
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-brown-100">
-          {mode === 'edit' ? (
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              删除
-            </button>
-          ) : (
-            <div />
-          )}
+          <div className="flex items-center gap-2">
+            {mode === 'edit' ? (
+              <>
+                {id && formData.ancestorName && (
+                  <FavoriteButton
+                    entityType="ritual"
+                    entityId={id}
+                    name={`${formData.ancestorName} 祭祀`}
+                    subtitle={formData.date ? formatDate(formData.date) : undefined}
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  删除
+                </button>
+              </>
+            ) : (
+              <div />
+            )}
+          </div>
           
           <div className="flex items-center gap-3">
             <Link to="/rituals" className="btn-secondary">
